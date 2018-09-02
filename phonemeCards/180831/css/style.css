@@ -1,0 +1,52 @@
+body {
+  margin: 0;
+  overflow: hidden;
+  text-align: center;
+  max-width: 800px;
+}
+
+div.row {
+  height: 20vw;
+  display: flex;
+}
+
+div.row div {
+  position: relative;
+  width: 20vw;
+  border: 1px solid #000;
+  display: inline-block;
+  height: 100%;
+  box-sizing: border-box;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+}
+
+div.row div.top {
+  justify-content: flex-start;
+}
+
+p {
+  width: 100%;
+  font-size: 2.9vw;
+  color: #eee;
+  margin: 0;
+}
+
+p:first-child {
+  position: absolute;
+  left: 0;
+  top: 5.1vw;
+  font-size: 10.8vw;
+  color: #500;
+  opacity: 0.67;
+}
+
+
+span {
+  color: #333;
+}
+
+span.half {
+  color: #ccc;
+}

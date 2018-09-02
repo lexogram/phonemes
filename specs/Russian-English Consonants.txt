@@ -1,0 +1,41 @@
+              Labial           Dental,Alveolar  Post-alveolar  Palatal  Velar
+              hard  soft       hard  soft       hard           soft     hard  soft
+Nasal           m    mʲ           n    nʲ        
+                м                н
+Stop     voiced b    bʲ           d    dʲ                                  ɡ   (ɡʲ)
+                б                д                                        г
+      voiceless p    pʲ           t    tʲ                                  k   (kʲ)
+                п                т                                        к
+Affricate   "                    t͡s  (t͡sʲ)                       t͡ɕ
+                                 ц                               ч
+Fricative   "   f    fʲ           s    sʲ          ʂ              ɕː       x   (xʲ)
+                ф                с                ш              щ       х
+         voiced v    vʲ           z    zʲ          ʐ             (ʑː)     (ɣ)
+                в                з                ж              зж      ого́
+Approximant                      ɫ     lʲ                         j
+                                 л                              (ё)
+Trill                                 rʲ           r
+                                                  р
+
+               Labial   Dental  Alveolar        Post-alveolar  Palatal  Velar       Glottal
+Nasal             m              n                                       ŋ 
+       
+Plosive/  fortis  p              t                t͡ʃ                      k 
+affricate lenis   b              d                d͡ʒ                     ɡ 
+      
+Fricative fortis  f        θ     s                ʃ                       x           h
+          lenis   v        ð     z                ʒ
+      
+Lateral                          l        
+      
+Approximant                                       r               j      w  
+
+
+
+ бвгд  жз  клмн прст фхцчшщ
+а    её  ий    о    у       ы эюя
+яа   еэ  ий   ёо   юу       ы
+абвгдеёжзийклмнопрстуфхцчшщъыьэюя
+
+
+https://en.wikipedia.org/wiki/International_Phonetic_Alphabet_chart_for_English_dialects

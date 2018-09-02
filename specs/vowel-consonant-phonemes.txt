@@ -1,0 +1,47 @@
+/i:/ reed   ease
+/u:/ do     who
+/ɪ/  hit    his
+/ʊ/ good   would
+/ə/  a
+/ɜː/ her    learn
+/ɛ/  bed    then
+/ʌ/  up     must
+/ɔ:/ for    aught
+/æ/  at     act
+/ɑ:/ arm    art
+/ɒ/  odd    of
+/ɪə/ here
+/ju/ new
+/ʊə/ sure
+/eɪ/ lay
+/əʊ/ go
+/ɔɪ/ boy
+/eə/ where
+/aɪ/  my
+/aʊ/ now
+/b/
+/ʧ/
+/d/
+/f/
+/g/
+/h/
+/ʤ/
+/k/
+/l/
+/m/
+/n/
+/ŋ/
+/p/
+/r/
+/s/
+/ʃ/
+/t/
+/θ/
+/ð/
+/v/
+/w/
+/y/
+/z/
+/ʒ/
+/j/
+/x/ loch

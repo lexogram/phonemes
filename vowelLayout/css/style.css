@@ -1,0 +1,50 @@
+@font-face {
+  font-family: GentiumPlusW;
+  src: url(../fonts/GentiumPlus-R.woff);
+}
+
+body {
+  font-size: 20px;
+}
+
+img {
+  position: absolute;
+  top: 1128px;
+  left: 0;
+  width: 207px;
+}
+
+canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+}
+
+svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 1430px;
+  visibility: hidden;
+}
+
+div.overlay {
+  position: absolute;
+  left: 0;
+  top: 930px;
+  text-align: right
+}
+
+.overlay svg {
+  visibility: visible;
+}
+
+.overlay canvas {
+  opacity: 0.25;
+}
+
+@media print {    
+  div.overlay{
+    display: none !important;
+  }
+}

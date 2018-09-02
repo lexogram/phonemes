@@ -1,0 +1,21 @@
+Funetiks
+————————
+
+A number of tiles appears on the screen. These may be up to 4 letters long, and may contain blank squares. Each tile represents a single phoneme.
+
+The player can arrange these tiles in order to create words. Both the spelling and the phonetic pronunciation must be correct for the word to earn any points. One point is given for each tile in the word.
+
+(If only the spelling or only the pronunciation is correct, then the word count will be increased by 1, but no tile points will be given. In the rare case where the spelling is correct for one word and the pronunciation is correct for another, something special can happen).
+
+With each set of tiles, a 60s countdown begins. The player can create as many valid words as possible in this time, or click NEXT to get a new set of tiles. If all possible words are found before the end of the 60s, a time bonus will be given.
+
+Words that have already been found will be shown on the left.
+Words that could be found will appear as blurred outlines. When 60s is up, the blur will disappear. The player can then press NEXT to get the next set.
+
+Each set will include one word that can be made with all the tiles. Finding this word doubles its score. Perhaps an illustration of this word will appear as a backdrop, to give a clue.
+
+The game will start with small sets of tiles. Ideally, each set should produce several words, but perhaps the very first levels will only have one or two possibilities.
+
+Pressing and holding on a tile will play the phoneme for that tile.
+
+The player will need to learn the phonetic symbols during gameplay. This could be done by showing a set with only one possible arrangement, and a background image that shows its meaning. The spelling of the word can reinforce the understanding of the sound. The same phoneme with different spellings can be shown at regular intervals and return more often if it is badly used.
