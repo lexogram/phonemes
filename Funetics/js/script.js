@@ -23,7 +23,7 @@
       this.wordData = {}
       this.tiles = []
 
-      this._display("range")
+      this._display("leave")
     }
 
 
@@ -92,7 +92,7 @@
 
       let divider = document.createElement("div")
       divider.classList.add("divider")
-      divider.style = "left:" + (index * 14 - 1) + "vmin;"
+      divider.style = "left:" + (index * 1.32 - 0.1) + "em;"
       tile.appendChild(divider)
 
       return tile
@@ -119,6 +119,8 @@
     
 
     _addPhoneme(tile, phoneme) {
+      return
+
       phoneme = phoneme.replace(/(\(.+\))/
       , "<span class='faint'>$1</span>")
 
