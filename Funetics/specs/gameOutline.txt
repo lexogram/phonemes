@@ -19,3 +19,12 @@ The game will start with small sets of tiles. Ideally, each set should produce s
 Pressing and holding on a tile will play the phoneme for that tile.
 
 The player will need to learn the phonetic symbols during gameplay. This could be done by showing a set with only one possible arrangement, and a background image that shows its meaning. The spelling of the word can reinforce the understanding of the sound. The same phoneme with different spellings can be shown at regular intervals and return more often if it is badly used.
+
+Typing in Dvorak по-русский ไอติม english fʌnɛtɪks ñẽãñẽɔɔ̃
+Data
+————
+We need:
+* Word
+* Spelling broken into phonetic units
+* List of other words that can be made from these units
+* List of unacceptable words which match only spelling or sound

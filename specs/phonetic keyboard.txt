@@ -1,0 +1,149 @@
+// IPA Phonetic keyboard for English and Russian
+// version 1.0
+// james@lexogram.com 2018-09[04]
+//
+// Install instructions:
+//
+// Copy this file to your /usr/share/X11/xkb/symbols/ directory.
+// You may need root privileges to do so.
+//
+// Add the following line to /usr/share/X11/xkb/rules/base.list
+//
+//   ipa          ipa: IPA phonetic symbols for English and Russian
+//
+// In order to make the keyboard layout available in Unity,
+// you should also modify /usr/share/X11/xkb/evdev.xml
+// by adding the following to the layoutList:
+//
+//  <layout>
+//    <configItem>
+//      <name>ipa</name>
+//      <shortDescription>Phonetic</shortDescription>
+//      <description>Phonetic</description>
+//      <languageList>
+//        <iso639Id>eng</iso639Id>
+//      </languageList>
+//    </configItem>
+//    <variantList />
+//  </layout>
+//
+// Sources:
+// https://en.wiktionary.org/wiki/Appendix:English_pronunciation
+// https://www.compart.com/en/unicode/
+//
+// Standard vowels and consonants positioned as in:
+// Dvorak interational extended keyboard layout for linux
+// version 1.01
+// http://arjenvankol.com/dvorak.php
+// 2007/12/19 23:25 +0100 Arjen van Kol
+
+partial default alphanumeric_keys
+xkb_symbols "basic" {
+
+    name[Group1]= "Dvorak international extended";
+
+    // Alphanumeric section
+
+  key <TLDE> {[ grave, asciitilde, dead_grave, dead_tilde ]};
+
+
+  key <AE01> {[ U02A6, U02C8, Cyrillic_tse ]};
+  // ʦ ˈ ц
+  key <AE02> {[ U0251, U02CC ]};
+  // ɑ ˌ
+  key <AE03> {[ U0252, 3 ]};
+  // ɒ
+  key <AE04> {[ U0254, 4 ]};
+  // ɔ
+  key <AE05> {[ U028A , 5]};
+  // ʊ
+  key <AE06> {[ U0255, U0291, Cyrillic_shcha ]};
+  // ɕ — щ, ʑ — зж
+  key <AE07> {[ U02A8, U02A5, Cyrillic_che ]};
+  // ʨ — ч, ʥ — дочь бы
+  key <AE08> {[ U03B8, 8 ]};
+  // θ
+  key <AE09> {[ U014B,  parenleft]};
+  // ŋ
+  key <AE10> {[ U0292, parenright ]};
+  // ʒ
+  key <AE11> {[ U0282, _, Cyrillic_sha ]};
+  // ʂ — ш
+  key <AE12> {[ U0290, _, Cyrillic_zhe ]};
+  // ʐ — ж
+
+  key <AD01> {[ U00E6 ]};
+  // ae
+  key <AD02> {[ U028C ]};
+  // ʌ
+  key <AD03> {[ U0259, U0258, U025A ]};
+  // ə ɘ ɚ
+  key <AD04> {[ p ]};
+  // p
+  key <AD05> {[ U026A, U1D7B ]};
+  // ɪ ᵻ
+  key <AD06> {[ f ]};
+  // f
+  key <AD07> {[ g ]};
+  // g
+  key <AD08> {[ U00F0 ]};
+  // ð
+  key <AD09> {[ U0279, r ]};
+  // ɹ r
+  key <AD10> {[ l, U026B ]};
+  // l ɫ
+  key <AD11> {[ slash ]};
+  // /
+  key <AD12> {[ U02A7 ]};
+  // ʧ
+  key <BKSL> {[ U02A4 ]};
+  // ʤ
+
+  key <AC01> {[ a, U0250 ]};
+  // a ɐ
+  key <AC02> {[ o,  U0275 ]};
+  // o ɵ
+  key <AC03> {[ e,  ., U1D49 ]};
+  // e . ᵉ
+  key <AC04> {[ u, U0289 ]};
+  // u ʉ
+  key <AC05> {[ i,  U0268 ]};
+  // i ɨ
+  key <AC06> {[ d ]};
+  // d
+  key <AC07> {[ h ]};
+  // h
+  key <AC08> {[ t, U0294 ]};
+  // t ʔ
+  key <AC09> {[ n, dead_tilde, U02CC U0329 ]};
+  // n ~ ˌ (syllabic consonant)
+  key <AC10> {[ s ]};
+  // s
+  key <AC11> {[ U0283 ]};
+  // ʃ
+
+  key <AB01> {[ U025C, U02D0, U025D ]};
+  // ɜ ː ɝ
+  key <AB02> {[ U025B ]};
+  // ɛ
+  key <AB03> {[ j ]};
+  // j
+  key <AB04> {[ k ]};
+  // k
+  key <AB05> {[ x, U0263 ]};
+  // x ɣ
+  key <AB06> {[ b ]};
+  // b
+  key <AB07> {[ m, U0271 ]};
+  // m ɱ
+  key <AB08> {[ w, U02D8]};
+  // w ʍ
+  key <AB09> {[ v ]};
+  // v
+  key <AB10> {[ z ]};
+  // z
+
+  key <SPCE> { [ space, nobreakspace, nobreakspace ] };
+
+  include "level3(ralt_switch)"
+};
