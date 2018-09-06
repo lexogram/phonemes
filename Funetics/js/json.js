@@ -122,9 +122,37 @@
     , "miss": {
        }
     }
+  , "danger": {
+      "phonemes": [
+        "d|a|n|g—|er"
+      , "d|eɪ|n|ʤ|ə(ɹ)"
+      ]
+    , "anagram": {
+        "alphabet": [
+          "danger"
+        , "Dane"
+        ]
+      , "IPA": [
+          "deɪnʤə(ɹ)"
+        , "deɪn"
+        ]
+      , "url": [
+          { "images": "https://www.google.com/search?q=danger&tbm=isch"
+          , "meaning": "https://en.wiktionary.org/wiki/danger#English"
+          , "usage": "https://tatoeba.org/eng/sentences/search?query=danger&from=eng&to=rus"}
+        , { "images": "https://www.google.com/search?q=dane&tbm=isch"
+          , "meaning": "https://en.wiktionary.org/wiki/dane#English"
+          , "usage": "https://tatoeba.org/eng/sentences/search?query=dane&from=eng&to=rus"}
+        ]
+      }
+    , "miss": {
+        "ʤeɪn": [ "Jane" ]
+      , "ʤeɪd": [ "jade" ]
+      }
+    }
   , "range": {
       "phonemes": [
-        "r|a.e|n|g"
+        "r|a.e|n|g—"
       , "ɹ|eɪ|n|ʤ"
       ]
     , "anagram": {
@@ -133,8 +161,8 @@
         , "rage"
         ]
       , "IPA": [
-          "ɹeɪʤ"
-        , "ɹeɪnʤ"
+          "ɹeɪnʤ"
+        , "ɹeɪʤ"
         ]
       , "url": [
           { "images": "https://www.google.com/search?q=range&tbm=isch"

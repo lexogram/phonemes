@@ -14,6 +14,19 @@ body {
   background-color: #000;
   text-align: center;
   font-size: 12vmin;
+  overflow: hidden;
+}
+
+* {
+  box-sizing: border-box;
+  /* No text selection */
+  -webkit-touch-callout: none; /* iOS Safari */
+    -webkit-user-select: none; /* Safari */
+     -khtml-user-select: none; /* Konqueror HTML */
+       -moz-user-select: none; /* Firefox */
+        -ms-user-select: none; /* Internet Explorer/Edge */
+            user-select: none; /* Non-prefixed version, currently
+                                  supported by Chrome and Opera */
 }
 
 h1  {
@@ -29,6 +42,7 @@ h1  {
   height: 100%;
 }
 
+
 .tile,
 .tile-set {
   position: relative;
@@ -41,9 +55,9 @@ h1  {
 span.string {
   display: inline-block;
 
-  width: 1.125em;
-  height: 1.125em;
-  font-size: 1em;
+  width: 1.3333em;
+  height: 1.3333em;
+  font-size: 0.75em;
   text-align: center;
   line-height: 1em;
 
@@ -71,7 +85,9 @@ span.plain:last-child {
 }
 
 .tile-set {
+  position: absolute;
   display: flex;
+  cursor: pointer;
 }
 
 .phoneme {

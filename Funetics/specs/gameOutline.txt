@@ -20,7 +20,7 @@ Pressing and holding on a tile will play the phoneme for that tile.
 
 The player will need to learn the phonetic symbols during gameplay. This could be done by showing a set with only one possible arrangement, and a background image that shows its meaning. The spelling of the word can reinforce the understanding of the sound. The same phoneme with different spellings can be shown at regular intervals and return more often if it is badly used.
 
-Typing in Dvorak по-русский ไอติม english fʌnɛtɪks ñẽãñẽɔɔ̃
+
 Data
 ————
 We need:
@@ -28,3 +28,49 @@ We need:
 * Spelling broken into phonetic units
 * List of other words that can be made from these units
 * List of unacceptable words which match only spelling or sound
+
+INTERACTIONS
+============
+
+Placing the tiles
+—————————————————
+
+The size of the tiles can depend on the length of the word and the space available. There should be room for at least one letter on any side, so the height of the letters must be at most 25% of the total height, and the width of the letters must be 1/(n + 2) * total width.
+
+The letters need to be placed in a random, absolute position at the foot of the board. The empty space around them will be (2 / (n + 2)) * total width. The space between them will be (2 / (n + 2)) / (m + 1), where n is the number of letters and m is the number of tiles.
+
+Sizing and positioning
+——————————————————————
+The font for the body determines the size of the tiles. The spacing of the tiles is determined by the size of the board.
+
+When the board changes size, the tiles should remain in the same relative positions, and their size may change.
+
+If a group of tiles is touching, then the position of the whole group should be defined by its centre.
+
+The position can be calculated as a ratio (0.0 - 1.0) from the bottom left. If a tile is at the bottom, it will remain there. If it is at 1.0 from the bottom then its bottom will be (windowHeight - tileHeight) from the bottom.
+
+Tiles will be placed relative to their centres. The playing area will be measured with a tileWidth/2 border. 
+
+Tiles may get smaller as the window narrows. When the window becomes portrait, we can place extra information at the top of the screen.
+
+Tiles at the bottom will be at -1. Tiles that have been moved to the play area will have a lowest value of 0. There will be a "ridge" between the bottom of level 0 and the top of level 1, so that unplayed tiles don't touch those in play.
+
+If there is not much height, tiles will be small. The maximum size depends on the width. On the rack, the widest positions will be
+
+* charWidth = boardWidth / (charCount + 2)
+* freeWidth = charWidth * 2
+* gapWidth  = freeWidth / (tileCount + 1)
+* First char will be at gapWidth + charWidth / 2
+* Last char will be at boardWidth - gapWidth  - charWidth / 2
+
+These positions will count as 0 and 1, when top is -1.
+
+If the first tile is not a single character, its position will not be 0.
+
+For any tile t with first char index c and n chars:
+* tilePosition = 
+  (   c * tileWidth
+    + t * gapWidth
+    + (n * tileWidth) / 2)
+  /
+  dockWidth
