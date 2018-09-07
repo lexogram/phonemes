@@ -21,17 +21,21 @@
       this.body = document.querySelector("body")
       this.board = this.body.querySelector(".board")
 
+      this.placements = document.createElement("div")
+      this.placements.classList.add("placements")
+
       this.wordData = {}
       this.tiles = []
+      this.placementElements = []
 
-      this._display("anger")
+      this._display("clanger")
 
       this._listenForEvents()
     }
 
 
     resized(event) {
-      this._positionTiles()
+      this._updatePositions()
     }
 
 
@@ -78,8 +82,10 @@
       this._shuffle(this.tiles)
 
       this._emptyBoard()
+      this._createPlacements()
       this._placeTilesOnDock()
-      this._positionTiles()
+
+      this._updatePositions()
     }
 
 
@@ -166,16 +172,12 @@
 
     _emptyBoard() {
       while (this.board.hasChildNodes()) {
-        this.board.removeChild(element.lastChild);
+        this.board.removeChild(this.board.lastChild);
       }
     }
 
 
     _placeTilesOnDock() {
-      while (this.board.hasChildNodes()) {
-        this.board.removeChild(element.lastChild);
-      }
-
       let charIndex = 0
       let tile
         , charCount
@@ -198,10 +200,26 @@
 
         this.board.appendChild(tile)
       }
+    } 
+
+
+    _createPlacements() {
+      this.placementElements.length = 0
+
+      let placement
+
+      let total = this.charCount
+      for ( let ii = 0; ii < total; ii += 1 ) {
+        placement = document.createElement("div")
+        this.placementElements.push(placement)
+        this.placements.appendChild(placement)
+      }
+
+      this.board.appendChild(this.placements)
     }
 
 
-    _positionTiles(tiles) {
+    _updatePositions(tiles) {
       if (!tiles) {
         tiles = this.tiles
       }
@@ -209,7 +227,6 @@
       let height = this.board.getBoundingClientRect()
       let width  = this.boardWidth =  height.width
       height = height.height
-      let left = 0
 
       let tileCount = this.tiles.length
       let places    = this.charCount + 2
@@ -217,15 +234,24 @@
       let gapSize   = (charSize * 2) / (tileCount + 1)
 
       this.dockTop = height - charSize
-      // this.dockLeft = gapSize + charSize / 2
-      // this.dockWidth = width - (this.dockLeft * 2)
 
+      this.placementLeft = (width - (this.charCount * charSize)) / 2
+      this.dockLeft = this.placementLeft
+                    - ((tileCount - 1) * gapSize) / 2
       this.body.style = "font-size:" + charSize + "px;"
 
+      this._positionTiles(tiles, gapSize, charSize)
+      this._positionPlacements(charSize, width)
+    }
+
+
+    _positionTiles(tiles, gapSize, charSize) {
       tiles.forEach((tile) => { 
         let tileData = tile.tileData
-        let left = (tileData.tileIndex + 1) * gapSize
-                 + tileData.charIndex * charSize
+        let left  = this.dockLeft
+                  + tileData.tileIndex * gapSize
+                  + tileData.charIndex * charSize
+        let width = tileData.charCount * charSize
 
         if (tileData.inDock) {
           tile.style = "left:" + left + "px;"
@@ -236,6 +262,24 @@
 
         }
       })
+    }
+
+
+    _positionPlacements(charSize, boardWidth) {
+      let total = this.placementElements.length
+      let width = charSize * this.charCount
+      let left  = (boardWidth - width) / 2
+      let element
+
+      this.placements.style = "width:"+ width + "px;"
+                            + "left:" + left + "px;"
+
+      for ( let ii = 0; ii < total; ii += 1 ) {
+        element = this.placementElements[ii]
+        left = this.placementLeft + ii * charSize
+        element.style = "left:" + left + "px;"
+                      + "width:" + charSize + "px;"
+      }
     }
 
 
@@ -337,7 +381,7 @@
     _replaceInDock() {
       // TODO: Move other tiles around in _moveInDock, so nothing
       // will need to be done here
-      lx.funetics._positionTiles([this.tile])
+      lx.funetics._updatePositions([this.tile])
     }
 
 
