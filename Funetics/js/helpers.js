@@ -22,6 +22,22 @@
   }
 
 
+  // PROTOS // PROTOS // PROTOS // PROTOS // PROTOS // PROTOS //
+
+  if (!DOMRect.prototype.containsPoint) {
+    DOMRect.prototype.containsPoint = function(x, y) {
+      return (x < this.left || this.right < x)
+           ? false
+           : (y < this.top || this.bottom < y)
+             ? false
+             : true 
+    }
+  }
+
+
+  // EVENTS // EVENTS // EVENTS // EVENTS // EVENTS // EVENTS //
+
+
 
   class Debounce {
     constructor(event, callback, delay, waitForCompletion) {

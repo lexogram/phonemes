@@ -16,21 +16,70 @@
 
   class Funetics {
     constructor(data) {
+      this.wordData = new WordData(data)
+
+      let boardDiv = document.body.querySelector(".board")
+      this.board   = new Board(boardDiv)
+
+      // Exchange interfaces
+      let callback = this.board.showTiles.bind(this.board)
+      this.wordData.setInterface(callback)
+
+      callback = this.wordData.getNextWord.bind(this.wordData)
+      this.board.setInterface(callback)
+
+      callback()
+    }
+
+
+    destroy() {
+      this.board.setInterface(null)
+      this.wordData.setInterface(null)
+    }
+  }
+
+
+
+  class WordData {
+    constructor(data) {
       this.data = data
-   
-      this.body = document.querySelector("body")
-      this.board = this.body.querySelector(".board")
+    }
 
-      this.placements = document.createElement("div")
-      this.placements.classList.add("placements")
 
-      this.wordData = {}
-      this.tiles = []
-      this.placementElements = []
+    setInterface(callback) {
+      this.callback = callback
+    }
 
-      this._display("clanger")
+
+    getNextWord() {
+      //// <<< HARD-CODED
+      let word = "clanger"
+      //// HARD-CODED >>>>
+
+      let wordData = this.data[word]
+      this.callback(wordData)
+    }
+  }
+
+
+
+  class Board {
+    constructor(board, getNextWord){
+      this.board = board
+      this.getNextWord = getNextWord
+
+      this.wordRail = new Word(board)
+      this.dockRail = new Dock(board)
+      this.tileFactory  = new TileFactory(board)
+
+      // this.callback
 
       this._listenForEvents()
+    }
+
+
+    setInterface(callback) {
+      this.callback = callback
     }
 
 
@@ -45,7 +94,21 @@
         return
       }
 
-      new TileMove(tile, event, this.dockTop)
+      new TileMove(tile, event, this.dockRail, this.wordRail)
+    }
+
+
+    showTiles(wordData) {
+      this.tileFactory.generateTiles(wordData)
+
+      let tiles = this.tileFactory.tiles
+      let charCount = this.tileFactory.charCount
+
+      this._emptyBoard()
+      this.dockRail.initialize(tiles, charCount)
+      this.wordRail.initialize(charCount)
+
+      this._updatePositions()
     }
 
 
@@ -58,48 +121,140 @@
     }
 
 
-    //// CREATE AND DISPLAY TILES ////
+    _emptyBoard() {
+      while (this.board.hasChildNodes()) {
+        this.board.removeChild(this.board.lastChild);
+      }
+    }
 
-    _display(word) {
-      this.wordData = this.data[word]
+
+    _updatePositions(tiles) {
+      if (!tiles) {
+        tiles = this.tileFactory.tiles
+      }
+
+      let height    = this.board.getBoundingClientRect()
+      let width     = height.width
+      height        = height.height
+
+      let tileCount = tiles.length
+      let charCount = this.tileFactory.charCount
+      let places    = charCount + 2
+
+      let charSize  = Math.min(height / 4, width / places)
+      let gapSize   = (charSize * 2) / (tileCount + 1)
+
+      let dockLeft  = (width - (charCount * charSize)
+                             - ((tileCount - 1) * gapSize))
+                      / 2
+
+      document.body.style = "font-size:" + charSize + "px;"
+
+      this.dockRail.preparePositions(charSize, gapSize, dockLeft)
+      this.wordRail.preparePositions(charSize, charCount)
+
+      this._positionTiles(tiles, gapSize, charSize)
+    }
+
+
+    _positionTiles(tiles, gapSize, charSize) {
+      tiles.forEach((tile) => { 
+        this.board.appendChild(tile)
+
+        if (tile.tileData.inWord) {
+          this.wordRail.setTilePosition(tile)
+        } else {
+          this.dockRail.setTilePosition(tile)
+        }
+      })
+    }
+
+
+    //// INTERACTIONS ////
+
+    _extractTile(event) {
+      let tile = event.target
+
+      while (tile && !tile.classList.contains("tile-set")) {
+        if (tile.tagName === "HTML") {
+          tile = null
+          break
+        } 
+
+        tile = tile.parentNode
+      }
+
+      return tile
+    }
+  }
+
+
+
+  class TileFactory {
+    constructor(board) {
+      this.board = board
+
+      this.wordData = {}
+      this.tiles = []
+
+      // this.phonemes
+      // this.strings
+      // this.charCount
+    }
+
+
+    generateTiles(wordData) {    
+      this.wordData = wordData
       this.tiles.length = 0
 
       this.phonemes = this.wordData.phonemes
-      this.strings = this.phonemes[0].split("|")
+      this.strings  = this.phonemes[0].split("|")
       this.phonemes = this.phonemes[1].split("|")
 
-      word = this.strings.join("")
-      word = word.split(/[.–—]/).join("")
+      // Words like "anger" and "eighth" will have more than one
+      // `char` for the letters that contribute to 2 phonemes
+      let word = this.strings.join("") // lea.ev ang––ger rang—e
+
+      // Filter out:
+      // * . : space between vowels for consonants
+      // * - : used to split a single consonant into two phonemes
+      // * — : used to indicate that a 'c' or a 'g' is softened by
+      //       a following 'e' or 'i' 
+
+      word = word.split(/[.–—]/).join("") // leaev angger range
       this.charCount = word.length
+      let tileCount = this.strings.length
 
       let tile
-      let total = this.strings.length
-      for ( let ii = 0; ii < total; ii += 1 ) {
-        tile = this._createTile(this.strings[ii], this.phonemes[ii])
+        , string
+
+      for ( let ii = 0; ii < tileCount; ii += 1 ) {
+        string = this.strings[ii]
+        tile = this._createTile(string, this.phonemes[ii])
+        tile.tileData = {
+          charCount: string.length
+        }
+
         this.tiles.push(tile)
       }
 
       this._shuffle(this.tiles)
 
-      this._emptyBoard()
-      this._createPlacements()
-      this._placeTilesOnDock()
-
-      this._updatePositions()
+      return this.tiles
     }
 
 
     _createTile(string, phoneme) {
       // console.log(string, phoneme)
       if (string.indexOf(".") < 0) {
-        return this._solidTile(string, phoneme)
+        return this._createSolidTile(string, phoneme)
       } else {
-        return this._stretchTile(string, phoneme)
+        return this._createSplitTile(string, phoneme)
       }
     }
 
 
-    _solidTile(string, phoneme) {
+    _createSolidTile(string, phoneme) {
       let tile = document.createElement("div")
       tile.classList.add("tile-set")
 
@@ -112,7 +267,7 @@
     }
 
 
-    _stretchTile(string, phoneme) {
+    _createSplitTile(string, phoneme) {
       let tile = document.createElement("div")
       tile.classList.add("tile-set")
 
@@ -168,168 +323,189 @@
     _shuffle(array) {
 
     }
+  }
 
 
-    _emptyBoard() {
-      while (this.board.hasChildNodes()) {
-        this.board.removeChild(this.board.lastChild);
-      }
+
+  class Rail {
+    constructor(board, type) {
+      this.board = board
+      this.rail = document.createElement("div")
+      this.rail.classList.add("rail", type)  
     }
 
 
-    _placeTilesOnDock() {
+    initialize() {
+      // The board was completely emptied earlier. Put the rail back.
+      this.board.appendChild(this.rail)
+    }
+
+
+    setTilePosition(tile) {
+
+    }
+  }
+
+
+
+  class Dock extends Rail {
+    constructor(board) {
+      super(board, "dock")
+    }
+
+
+    preparePositions(charSize, gapSize, dockLeft) {
+      this.charSize = charSize
+      this.gapSize  = gapSize
+      this.dockLeft = dockLeft
+    }
+
+
+    initialize(tiles, totalChars) {
+      super.initialize()
+
       let charIndex = 0
-      let tile
-        , charCount
+      let tileData
 
-      let total = this.tiles.length
+      let total = tiles.length
       for ( let ii = 0; ii < total; ii += 1 ) {
-        tile = this.tiles[ii] 
+        tileData = tiles[ii].tileData
 
-        charCount = tile.querySelectorAll(".tile span").length       
+        Object.assign(
+          tileData
+        , { top: -1
+          , tileIndex: ii
+          , charIndex: charIndex
+          , inWord:    false
+          }
+        )
 
-        tile.tileData = {
-          top: -1
-        , tileIndex: ii
-        , charIndex: charIndex
-        , charCount: charCount
-        , inDock:    true
-        }
+        // console.log(tileData)
 
-        charIndex += charCount
-
-        this.board.appendChild(tile)
+        charIndex += tileData.charCount
       }
     } 
 
 
-    _createPlacements() {
-      this.placementElements.length = 0
+    setTilePosition(tile) {
+      let tileData = tile.tileData
+      let left  = this.dockLeft
+                + tileData.tileIndex * this.gapSize
+                + tileData.charIndex * this.charSize
+      let width = tileData.charCount * this.charSize
 
-      let placement
+      tile.style = "left:" + left + "px;"
+                 + "bottom:0;"
+                 + "width:" + width + "px;"
+    }
+  }
 
-      let total = this.charCount
-      for ( let ii = 0; ii < total; ii += 1 ) {
-        placement = document.createElement("div")
-        this.placementElements.push(placement)
-        this.placements.appendChild(placement)
-      }
 
-      this.board.appendChild(this.placements)
+
+  class Word extends Rail {
+    constructor(board) {
+      super(board, "word") 
+      this.railElements = []
+
+      // this.railLeft
     }
 
 
-    _updatePositions(tiles) {
-      if (!tiles) {
-        tiles = this.tiles
-      }
+    initialize(charCount) {
+      super.initialize()
+      this.railElements.length = 0
 
-      let height = this.board.getBoundingClientRect()
-      let width  = this.boardWidth =  height.width
-      height = height.height
-
-      let tileCount = this.tiles.length
-      let places    = this.charCount + 2
-      let charSize  = Math.min(height / 4, width / places)
-      let gapSize   = (charSize * 2) / (tileCount + 1)
-
-      this.dockTop = height - charSize
-
-      this.placementLeft = (width - (this.charCount * charSize)) / 2
-      this.dockLeft = this.placementLeft
-                    - ((tileCount - 1) * gapSize) / 2
-      this.body.style = "font-size:" + charSize + "px;"
-
-      this._positionTiles(tiles, gapSize, charSize)
-      this._positionPlacements(charSize, width)
-    }
-
-
-    _positionTiles(tiles, gapSize, charSize) {
-      tiles.forEach((tile) => { 
-        let tileData = tile.tileData
-        let left  = this.dockLeft
-                  + tileData.tileIndex * gapSize
-                  + tileData.charIndex * charSize
-        let width = tileData.charCount * charSize
-
-        if (tileData.inDock) {
-          tile.style = "left:" + left + "px;"
-                     + "bottom:0;"
-                     + "width:" + width + "px;"
-
-        } else {
-
-        }
-      })
-    }
-
-
-    _positionPlacements(charSize, boardWidth) {
-      let total = this.placementElements.length
-      let width = charSize * this.charCount
-      let left  = (boardWidth - width) / 2
       let element
 
-      this.placements.style = "width:"+ width + "px;"
-                            + "left:" + left + "px;"
+      for ( let ii = 0; ii < charCount; ii += 1 ) {
+        element = document.createElement("div")
+        this.railElements.push(element)
+        this.rail.appendChild(element)
+      }
+    }
+
+
+    preparePositions(charSize, charCount, board) {
+      board = this.board.getBoundingClientRect()
+      let width = (charCount * charSize)
+      this.railLeft = (board.width - width) / 2
+
+      this.rail.style = "left:" + this.railLeft + "px;"
+                      + "width:" + width + "px;"
+                      + "top:" + (board.height - charSize * 3) + "px;"
+                      + "height:" + charSize + "px;"
+
+      let total = this.railElements.length
+      let element
+        , left
 
       for ( let ii = 0; ii < total; ii += 1 ) {
-        element = this.placementElements[ii]
-        left = this.placementLeft + ii * charSize
+        element = this.railElements[ii]
+        left = this.railLeft + ii * charSize
         element.style = "left:" + left + "px;"
                       + "width:" + charSize + "px;"
       }
     }
 
 
-    //// INTERACTIONS ////
-
-    _extractTile(event) {
-      let tile = event.target
-
-      while (tile && !tile.classList.contains("tile-set")) {
-        if (tile.tagName === "HTML") {
-          tile = null
-          break
-        } 
-
-        tile = tile.parentNode
-      }
-
-      return tile
+    findFirstEmptyPlaceFor(tile) {
+      tile.tileData.inWord = true
+      console.log("Added tile " + tile.innerText + " to word")
     }
   }
 
 
 
   class TileMove {
-    constructor (tile, event, dockTop) {
+    constructor (tile, event, dock, word) {
       this.tile = tile
       this.offset = this._getOffsetFromTopLeft(tile, event)
-      this.dockTop = dockTop
+      this.dock = dock
+      this.word = word
+
+      this.dockRect = dock.rail.getBoundingClientRect()
+      this.wordRect = word.rail.getBoundingClientRect()
+      this.bottom   = this.dockRect.bottom
 
       this.tile.style.zIndex = "99"
+      this.moved = false
 
       document.body.onmousemove = this.moveTile.bind(this)
       document.body.onmouseup = this.stopDrag.bind(this)
+
+
     }
 
 
     moveTile(event) {
-      if (this.tile.tileData.inDock = event.pageY > this.dockTop) {
-        this._moveInDock(event)
-      } else {
-        this._moveOnBoard(event)
+      this.moved = true
+
+      let x = event.pageX
+      let y = event.pageY
+      let rect = this.wordRect
+      let inWord = this.tile.inWord = rect.containsPoint(x, y)
+
+      if (!inWord) {
+        rect = this.dockRect
+        if (!rect.containsPoint(x, y)) {
+          return this._moveOnBoard(event)
+        }
       }
+
+      this._moveInRect(event, rect)
     }
 
 
-    stopDrag(event) {
-      if (this.tile.tileData.inDock) {
-        this._replaceInDock()
+    stopDrag() {
+      if (!this.moved) {
+        if (!this.tile.tileData.inWord) {
+          this.word.findFirstEmptyPlaceFor(this.tile)
+        }
+
+      } else if (this.tile.tileData.inWord) {
+        this.word.setTilePosition(this.tile)
       } else {
-        this._snapToNearbyTiles()
+        this.dock.setTilePosition(this.tile)
       }
 
       this.tile.style.removeProperty("z-index")
@@ -338,20 +514,20 @@
     }
 
 
-    _getOffsetFromTopLeft(tile, event) {
-      let offset = { x: 0, y: 0 }
-      let rect = tile.getBoundingClientRect()
-      
-      offset.x = rect.left - event.pageX
-      offset.y = rect.top - event.pageY
+    _moveInRect(event, rect) {
+      let x = event.pageX + this.offset.x
+      let y = event.pageY + this.offset.y
 
-      console.log(offset)
+      this.tile.style.left = x + "px"
+      this.tile.style.bottom = (this.bottom - rect.bottom) + "px"
+      this.tile.style.removeProperty("top")
 
-      return offset
+      // TODO: Move other tiles around so that there is always
+      // space for all of them, and space to drop the current tile
     }
 
 
-    _moveOnBoard() { 
+    _moveOnBoard(event) { 
       let x = event.pageX + this.offset.x
       let y = event.pageY + this.offset.y
 
@@ -365,28 +541,34 @@
     }
 
 
-    _moveInDock(event) {
-      let x = event.pageX + this.offset.x
-      let y = event.pageY + this.offset.y
-
-      this.tile.style.left = x + "px"
-      this.tile.style.bottom = 0
-      this.tile.style.removeProperty("top")
-
-      // TODO: Move other tiles around so that there is always
-      // space for all of them, and space to drop the current tile
-    }
-
-
     _replaceInDock() {
       // TODO: Move other tiles around in _moveInDock, so nothing
       // will need to be done here
-      lx.funetics._updatePositions([this.tile])
+      
     }
 
 
     _snapToNearbyTiles() {
       console.log("TODO: Check if tile should snap to another tile")
+    }
+
+
+    // UTILITIES // UTILITIES // UTILITIES // UTILITIES // UTILITIES /
+
+    _getOffsetFromTopLeft(tile, event) {
+      let offset = { x: 0, y: 0 }
+      let rect = tile.getBoundingClientRect()
+      
+      offset.x = rect.left - event.pageX
+      offset.y = rect.top - event.pageY
+
+      return offset
+    }
+
+
+    _eventPointIsInRect(event, rect) {
+      // DOMRect.prototype.containsPoint added in helpers.js
+      return rect.containsPoint(event.pageX, event.pageY)
     }
 
 
