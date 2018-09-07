@@ -157,7 +157,7 @@
     }
 
 
-    _positionTiles(tiles, gapSize, charSize) {
+    _positionTiles(tiles) { //, gapSize, charSize) {
       tiles.forEach((tile) => { 
         this.board.appendChild(tile)
 
@@ -331,7 +331,9 @@
     constructor(board, type) {
       this.board = board
       this.rail = document.createElement("div")
-      this.rail.classList.add("rail", type)  
+      this.rail.classList.add("rail", type)
+
+      this.height = this.board.getBoundingClientRect().bottom 
     }
 
 
@@ -343,6 +345,35 @@
 
     setTilePosition(tile) {
 
+    }
+
+
+    mapToRail(tile, x, y) {
+      let rect = this.rail.getBoundingClientRect()
+
+      if (rect.contains(x, y)) {
+        let count = tile.tileData.charCount
+        let right = rect.right - count * this.charSize
+
+        x += tile.tileData.offsetX
+        x = Math.max(rect.left, Math.min(x, right))
+
+        return {
+          x: x
+        , y: this.height - rect.bottom
+        }
+      }
+
+      // returns undefined if point is not in rail rect
+    }
+
+
+    moveTile(tile, point) {
+      console.log(tile.innerText, point)
+
+      tile.style.left = point.x + "px"
+      tile.style.bottom = point.y + "px"
+      tile.style.removeProperty("top")
     }
   }
 
@@ -426,6 +457,7 @@
 
 
     preparePositions(charSize, charCount, board) {
+      this.charSize = charSize
       board = this.board.getBoundingClientRect()
       let width = (charCount * charSize)
       this.railLeft = (board.width - width) / 2
@@ -459,21 +491,15 @@
   class TileMove {
     constructor (tile, event, dock, word) {
       this.tile = tile
-      this.offset = this._getOffsetFromTopLeft(tile, event)
+      this._setOffset(tile, event)
       this.dock = dock
       this.word = word
-
-      this.dockRect = dock.rail.getBoundingClientRect()
-      this.wordRect = word.rail.getBoundingClientRect()
-      this.bottom   = this.dockRect.bottom
 
       this.tile.style.zIndex = "99"
       this.moved = false
 
       document.body.onmousemove = this.moveTile.bind(this)
       document.body.onmouseup = this.stopDrag.bind(this)
-
-
     }
 
 
@@ -482,21 +508,25 @@
 
       let x = event.pageX
       let y = event.pageY
-      let rect = this.wordRect
-      let inWord = this.tile.inWord = rect.containsPoint(x, y)
 
-      if (!inWord) {
-        rect = this.dockRect
-        if (!rect.containsPoint(x, y)) {
-          return this._moveOnBoard(event)
-        }
+      let railPoint = this.word.mapToRail(this.tile, x, y)
+      this.tile.tileData.inWord = !!railPoint
+
+      if (railPoint) {
+        this.word.moveTile(this.tile, railPoint)
+
+      } else if (railPoint = this.dock.mapToRail(this.tile, x, y)) {
+        this.dock.moveTile(this.tile, railPoint)
+
+      } else {
+        this._moveOnBoard(x, y)
       }
-
-      this._moveInRect(event, rect)
     }
 
 
     stopDrag() {
+      console.log("stopDrag", this.tile.tileData.inWord)
+
       if (!this.moved) {
         if (!this.tile.tileData.inWord) {
           this.word.findFirstEmptyPlaceFor(this.tile)
@@ -514,25 +544,10 @@
     }
 
 
-    _moveInRect(event, rect) {
-      let x = event.pageX + this.offset.x
-      let y = event.pageY + this.offset.y
-
-      this.tile.style.left = x + "px"
-      this.tile.style.bottom = (this.bottom - rect.bottom) + "px"
-      this.tile.style.removeProperty("top")
-
-      // TODO: Move other tiles around so that there is always
-      // space for all of them, and space to drop the current tile
-    }
-
-
-    _moveOnBoard(event) { 
-      let x = event.pageX + this.offset.x
-      let y = event.pageY + this.offset.y
-
-      this.tile.style.left = x + "px"
-      this.tile.style.top  = y + "px"
+    _moveOnBoard(x, y) { 
+      this.tile.style.left = (x + this.tile.tileData.offsetX) + "px"
+      this.tile.style.top  = (y + this.tile.tileData.offsetY) + "px"
+      this.tile.style.removeProperty("bottom")
     }
 
 
@@ -555,20 +570,11 @@
 
     // UTILITIES // UTILITIES // UTILITIES // UTILITIES // UTILITIES /
 
-    _getOffsetFromTopLeft(tile, event) {
-      let offset = { x: 0, y: 0 }
+    _setOffset(tile, event) {
       let rect = tile.getBoundingClientRect()
       
-      offset.x = rect.left - event.pageX
-      offset.y = rect.top - event.pageY
-
-      return offset
-    }
-
-
-    _eventPointIsInRect(event, rect) {
-      // DOMRect.prototype.containsPoint added in helpers.js
-      return rect.containsPoint(event.pageX, event.pageY)
+      tile.tileData.offsetX = rect.left - event.pageX
+      tile.tileData.offsetY = rect.top - event.pageY
     }
 
 

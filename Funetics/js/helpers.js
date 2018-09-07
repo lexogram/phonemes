@@ -24,8 +24,8 @@
 
   // PROTOS // PROTOS // PROTOS // PROTOS // PROTOS // PROTOS //
 
-  if (!DOMRect.prototype.containsPoint) {
-    DOMRect.prototype.containsPoint = function(x, y) {
+  if (!DOMRect.prototype.contains) {
+    DOMRect.prototype.contains = function(x, y) {
       return (x < this.left || this.right < x)
            ? false
            : (y < this.top || this.bottom < y)
