@@ -147,7 +147,7 @@ span.plain:last-child {
 
 .word {
   position: absolute;
-  top: 25vh;
+  bottom: 25vh;
   height: 25vh;
   width: 100%;
   display: flex;
@@ -161,4 +161,18 @@ span.plain:last-child {
   height: 5%;
   border: 0.02em solid #ff0;
   border-top: none;
+}
+
+.word div.dummy {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  height: 100%;
+  width:  20%;
+  border: none;
+  background: #660;
+}
+
+.translucent {
+  opacity: 0.5;
 }

@@ -13,6 +13,17 @@
   }
 
 
+  // GENERIC METHODS // GENERIC METHODS // GENERIC METHODS //
+
+  function empty(element) {
+    while (element.hasChildNodes()) {
+      element.removeChild(element.lastChild);
+    }
+  }
+
+
+  // CLASSES // CLASSES // CLASSES // CLASSES // CLASSES // CLASSES //
+
 
   class Funetics {
     constructor(data) {
@@ -51,9 +62,9 @@
     }
 
 
-    getNextWord() {
+    getNextWord(word) {
       //// <<< HARD-CODED
-      let word = "clanger"
+      word ? null : word = "clanger"
       //// HARD-CODED >>>>
 
       let wordData = this.data[word]
@@ -104,7 +115,7 @@
       let tiles = this.tileFactory.tiles
       let charCount = this.tileFactory.charCount
 
-      this._emptyBoard()
+      empty(this.board)
       this.dockRail.initialize(tiles, charCount)
       this.wordRail.initialize(charCount)
 
@@ -118,13 +129,6 @@
 
       listener = this.resized.bind(this)
       lx.helpers.registerListener("resize", listener)
-    }
-
-
-    _emptyBoard() {
-      while (this.board.hasChildNodes()) {
-        this.board.removeChild(this.board.lastChild);
-      }
     }
 
 
@@ -229,13 +233,16 @@
         , string
 
       for ( let ii = 0; ii < tileCount; ii += 1 ) {
-        string = this.strings[ii]
+        string = this.strings[ii].replace(/[–—ˈˌ]/, "")
+
         tile = this._createTile(string, this.phonemes[ii])
         tile.tileData = {
           charCount: string.length
         }
 
         this.tiles.push(tile)
+
+        console.log(tile.innerText, tile.tileData)
       }
 
       this._shuffle(this.tiles)
@@ -247,7 +254,12 @@
     _createTile(string, phoneme) {
       // console.log(string, phoneme)
       if (string.indexOf(".") < 0) {
-        return this._createSolidTile(string, phoneme)
+        // if (string.indexOf("–") < 0) {
+          return this._createSolidTile(string, phoneme)
+        // }
+
+        // return this._createDoubleTile(string, phoneme)
+
       } else {
         return this._createSplitTile(string, phoneme)
       }
@@ -290,20 +302,32 @@
     }
 
 
-    _tileChunk(string) {
+    _tileChunk(chars) {
       let tile = document.createElement("div")
       tile.classList.add("tile")
 
-      let strings = string.replace(/[–—ˈˌ]/, "")
-                          .split("")
+      chars = chars.split("")
       let span
 
-      strings.forEach((string) => {
+      chars.forEach((char) => {
         span = document.createElement("span")
         span.classList.add("string", "plain")
-        span.innerHTML = string
+        span.innerHTML = char
         tile.appendChild(span)        
       })
+
+      // if (string[string.length - 1] === "–") {
+      //   span.classList.add("last", "half")
+      // }
+
+      // switch (string[0]) {
+      //   case "–":
+      //     tile.firstChild.classList.add("first", "half")
+      //   break
+      //   case "—":
+      //     tile.firstChild.classList.add("soften")
+      //   break
+      // }
 
       return tile
     }
@@ -343,11 +367,10 @@
     }
 
 
-    setTilePosition(tile) {
-
-    }
-
-
+    /**
+     * Returns `undefined` or the bottom-left corner of the tile
+     * freely dragged within the Word rail.
+     */
     mapToRail(tile, x, y) {
       let rect = this.rail.getBoundingClientRect()
 
@@ -385,15 +408,10 @@
     }
 
 
-    preparePositions(charSize, gapSize, dockLeft) {
-      this.charSize = charSize
-      this.gapSize  = gapSize
-      this.dockLeft = dockLeft
-    }
-
-
     initialize(tiles, totalChars) {
       super.initialize()
+
+      console.log("initialize")
 
       let charIndex = 0
       let tileData
@@ -404,18 +422,24 @@
 
         Object.assign(
           tileData
-        , { top: -1
-          , tileIndex: ii
+        , { tileIndex: ii
           , charIndex: charIndex
           , inWord:    false
           }
         )
 
-        // console.log(tileData)
+        console.log(tiles[ii].innerText, tileData)
 
         charIndex += tileData.charCount
       }
     } 
+
+
+    preparePositions(charSize, gapSize, dockLeft) {
+      this.charSize = charSize
+      this.gapSize  = gapSize
+      this.dockLeft = dockLeft
+    }
 
 
     setTilePosition(tile) {
@@ -436,15 +460,26 @@
   class Word extends Rail {
     constructor(board) {
       super(board, "word") 
+      // this.board
+      // this.rail
+      // this.height
+      // 
       this.railElements = []
+      this.slotMap = []
+      this.shadowMap = []
 
       // this.railLeft
+      // this.dummy
     }
 
 
     initialize(charCount) {
       super.initialize()
+      empty(this.rail)
       this.railElements.length = 0
+
+      this.slotMap.length = charCount
+      this.slotMap.fill(0)
 
       let element
 
@@ -453,6 +488,10 @@
         this.railElements.push(element)
         this.rail.appendChild(element)
       }
+
+      this.dummy = document.createElement("div")
+      this.dummy.classList.add("dummy")
+      this.rail.appendChild(this.dummy)
     }
 
 
@@ -461,10 +500,11 @@
       board = this.board.getBoundingClientRect()
       let width = (charCount * charSize)
       this.railLeft = (board.width - width) / 2
+      this.railBottom = (this.charSize * 2) + "px"
 
       this.rail.style = "left:" + this.railLeft + "px;"
                       + "width:" + width + "px;"
-                      + "top:" + (board.height - charSize * 3) + "px;"
+                      + "bottom:" + this.railBottom + ";"
                       + "height:" + charSize + "px;"
 
       let total = this.railElements.length
@@ -480,9 +520,156 @@
     }
 
 
+    setTilePosition(tile, index) {
+      if (index === "fromShadowMap") {
+        index = this.shadowMap.indexOf(tile)
+        this.slotMap = this.shadowMap.slice()
+
+      } else if (isNaN(index)) {
+        index = this.slotMap.indexOf(tile)  
+          
+        if (index < 0) {          
+          console.log("Tile '" + tile.innerText +"' is not on word rail")
+          return
+        }
+      }
+
+      let left = (this.railLeft + (index * this.charSize)) + "px"
+      tile.style.left = left
+      tile.style.bottom = this.railBottom
+      tile.style.removeProperty("top")
+    }
+
+
     findFirstEmptyPlaceFor(tile) {
-      tile.tileData.inWord = true
-      console.log("Added tile " + tile.innerText + " to word")
+      let tileData = tile.tileData
+      let charCount = tileData.charCount
+      let slotCount = this.slotMap.length
+      let emptySlot = -1
+
+      let total = slotCount - charCount + 1
+      // Use label to break out of inner loop and continue outer loop
+      // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Statements/label
+      outerLoop:
+      for ( let slot = 0; slot < total; slot += 1 ) {
+        if(this.slotMap[slot]) {
+          // This slot is taken
+          continue
+        }
+
+        // This slot is free. Is there enough space to the right?
+        for ( let next = 1 ; next < charCount ; next += 1 ) {
+          if (this.slotMap[slot + next]) {
+            continue outerLoop
+          }
+        }
+
+        // If we get here, `slot` is empty with enough empty slots to
+        // the right
+
+        emptySlot = slot
+        this.slotMap.fill(tile, slot, slot + charCount)
+        tile.tileData.inWord = true
+        this.setTilePosition(tile, emptySlot)
+
+        this._consoleMap()
+        break
+      }
+
+      // return emptySlot
+    }
+
+
+    checkIfTileIsOnRail(tile) {
+      tile.tileData.fromWord = !(this.slotMap.indexOf(tile) < 0)
+    }
+
+
+    /**
+     * [moveTile description]
+     * @param  {HTMLELement} tile      
+     * @param  {integer}     left      left of optimum insert point
+     * @param  {object}      dragPoint { x: left of free-dragged tile
+     *                                 , y: top        —⫵—           }
+     */
+    moveTile(tile, left, dragPoint) {
+      let insertAt = this._mapPointToInsertPoint(tile, left)
+      // { left: corrected left of inserted tile + "px"
+      // , action: <moveLeft | moveRight | remove>}
+
+      this.dummy.style.left = insertAt.left  
+      this.shadowMap = this.slotMap.slice()
+      if (tile.tileData.fromWord) {
+        console.log("fromWord")
+        this.removeFromMap(tile, this.shadowMap)
+      }
+
+      this._shiftExistingTiles(tile, insertAt)
+
+      this._consoleMap(this.shadowMap)
+
+      tile.style.left = dragPoint.x
+      tile.style.top = dragPoint.y
+
+      tile.classList.add("translucent")
+    }
+
+
+    removeFromMap(tile, map) {
+      if (!map) {
+        map = this.slotMap
+        tile.tileData.fromWord = false
+      }
+
+      map.forEach((slotItem, index, array) => {
+        if (slotItem === tile) {
+          array[index] = 0
+        }
+      })
+
+      // this._consoleMap(map)
+    }
+
+
+    _mapPointToInsertPoint(tile, left) {
+      let insertAt = {
+        index:  0
+      , action: -1
+      }
+
+      let offsetX = tile.tileData.offsetX
+      let charAdjust = Math.floor(-offsetX / this.charSize)
+      let index = (left - offsetX - this.railLeft) / this.charSize
+      index = Math.floor(index) - charAdjust
+      insertAt.left = (index * this.charSize) + "px"
+
+      let tileWidth = tile.tileData.charCount * this.charSize
+      let offsetRatio = offsetX / tileWidth
+      insertAt.action = (offsetRatio)
+
+      return insertAt
+    }
+
+
+    _shiftExistingTiles(tile, insertAt) {
+      let index = insertAt.index
+      let charCount = tile.tileData.charCount
+      this.shadowMap.fill(tile, index, index + charCount)
+    }
+
+
+
+    /// DEV TOOL // DEV TOOL // DEV TOOL // DEV TOOL // DEV TOOL ///
+
+    _consoleMap(map) {
+      if (!map) {
+        map = this.slotMap
+      }
+      console.log(
+        map===this.slotMap ? "slo" : "dow"
+      , map.map((slot) => {
+        return slot ? slot.innerText.replace(/\n.*/, "") : 0
+      }))
     }
   }
 
@@ -494,6 +681,8 @@
       this._setOffset(tile, event)
       this.dock = dock
       this.word = word
+
+      this.word.checkIfTileIsOnRail(tile)
 
       this.tile.style.zIndex = "99"
       this.moved = false
@@ -510,16 +699,17 @@
       let y = event.pageY
 
       let railPoint = this.word.mapToRail(this.tile, x, y)
+      let dragPoint = this._getDragPoint(this.tile, x, y)
       this.tile.tileData.inWord = !!railPoint
 
       if (railPoint) {
-        this.word.moveTile(this.tile, railPoint)
+        this.word.moveTile(this.tile, railPoint.x, dragPoint)
 
       } else if (railPoint = this.dock.mapToRail(this.tile, x, y)) {
         this.dock.moveTile(this.tile, railPoint)
 
       } else {
-        this._moveOnBoard(x, y)
+        this._moveOnBoard(dragPoint)
       }
     }
 
@@ -533,20 +723,22 @@
         }
 
       } else if (this.tile.tileData.inWord) {
-        this.word.setTilePosition(this.tile)
+        this.word.setTilePosition(this.tile, "fromShadowMap")
       } else {
+        this.word.removeFromMap(this.tile)
         this.dock.setTilePosition(this.tile)
       }
 
       this.tile.style.removeProperty("z-index")
+      this.tile.classList.remove("translucent")
 
       this._destroy()
     }
 
 
-    _moveOnBoard(x, y) { 
-      this.tile.style.left = (x + this.tile.tileData.offsetX) + "px"
-      this.tile.style.top  = (y + this.tile.tileData.offsetY) + "px"
+    _moveOnBoard(dragPoint) { 
+      this.tile.style.left = dragPoint.x
+      this.tile.style.top  = dragPoint.y
       this.tile.style.removeProperty("bottom")
     }
 
@@ -575,6 +767,14 @@
       
       tile.tileData.offsetX = rect.left - event.pageX
       tile.tileData.offsetY = rect.top - event.pageY
+    }
+
+
+    _getDragPoint(tile, x, y) {
+      return {
+        x: (x + this.tile.tileData.offsetX) + "px"
+      , y: (y + this.tile.tileData.offsetY) + "px"
+      }
     }
 
 
