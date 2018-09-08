@@ -1,6 +1,6 @@
 /** script.js **
  *
- * 
+ *
 **/
 
 
@@ -162,7 +162,7 @@
 
 
     _positionTiles(tiles) { //, gapSize, charSize) {
-      tiles.forEach((tile) => { 
+      tiles.forEach((tile) => {
         this.board.appendChild(tile)
 
         if (tile.tileData.inWord) {
@@ -183,7 +183,7 @@
         if (tile.tagName === "HTML") {
           tile = null
           break
-        } 
+        }
 
         tile = tile.parentNode
       }
@@ -207,7 +207,7 @@
     }
 
 
-    generateTiles(wordData) {    
+    generateTiles(wordData) {
       this.wordData = wordData
       this.tiles.length = 0
 
@@ -223,7 +223,7 @@
       // * . : space between vowels for consonants
       // * - : used to split a single consonant into two phonemes
       // * — : used to indicate that a 'c' or a 'g' is softened by
-      //       a following 'e' or 'i' 
+      //       a following 'e' or 'i'
 
       word = word.split(/[.–—]/).join("") // leaev angger range
       this.charCount = word.length
@@ -313,7 +313,7 @@
         span = document.createElement("span")
         span.classList.add("string", "plain")
         span.innerHTML = char
-        tile.appendChild(span)        
+        tile.appendChild(span)
       })
 
       // if (string[string.length - 1] === "–") {
@@ -331,7 +331,7 @@
 
       return tile
     }
-    
+
 
     _addPhoneme(tile, phoneme) {
       phoneme = phoneme.replace(/(\(.+\))/
@@ -357,13 +357,18 @@
       this.rail = document.createElement("div")
       this.rail.classList.add("rail", type)
 
-      this.height = this.board.getBoundingClientRect().bottom 
+      // this.height
     }
 
 
     initialize() {
       // The board was completely emptied earlier. Put the rail back.
       this.board.appendChild(this.rail)
+    }
+
+
+    preparePositions() {
+      this.height = this.board.getBoundingClientRect().height
     }
 
 
@@ -432,10 +437,12 @@
 
         charIndex += tileData.charCount
       }
-    } 
+    }
 
 
     preparePositions(charSize, gapSize, dockLeft) {
+      super.preparePositions()
+
       this.charSize = charSize
       this.gapSize  = gapSize
       this.dockLeft = dockLeft
@@ -459,11 +466,11 @@
 
   class Word extends Rail {
     constructor(board) {
-      super(board, "word") 
+      super(board, "word")
       // this.board
       // this.rail
       // this.height
-      // 
+      //
       this.railElements = []
       this.slotMap = []
       this.shadowMap = []
@@ -496,15 +503,17 @@
 
 
     preparePositions(charSize, charCount, board) {
+      super.preparePositions()
+
       this.charSize = charSize
       board = this.board.getBoundingClientRect()
       let width = (charCount * charSize)
       this.railLeft = (board.width - width) / 2
-      this.railBottom = (this.charSize * 2) + "px"
+      this.railBottom = (this.charSize * 2) + "px;"
 
       this.rail.style = "left:" + this.railLeft + "px;"
                       + "width:" + width + "px;"
-                      + "bottom:" + this.railBottom + ";"
+                      + "bottom:" + this.railBottom
                       + "height:" + charSize + "px;"
 
       let total = this.railElements.length
@@ -526,18 +535,20 @@
         this.slotMap = this.shadowMap.slice()
 
       } else if (isNaN(index)) {
-        index = this.slotMap.indexOf(tile)  
-          
-        if (index < 0) {          
-          console.log("Tile '" + tile.innerText +"' is not on word rail")
+        index = this.slotMap.indexOf(tile)
+
+        if (index < 0) {
+          console.log("Tile '" + tile.innerText +"' not on word rail")
           return
         }
       }
 
-      let left = (this.railLeft + (index * this.charSize)) + "px"
-      tile.style.left = left
-      tile.style.bottom = this.railBottom
-      tile.style.removeProperty("top")
+      let left = (this.railLeft + (index * this.charSize)) + "px;"
+      let width = (tile.tileData.charCount * this.charSize) + "px;"
+
+      tile.style = "left:" + left
+                 + "bottom:" + this.railBottom
+                 + "width:" + width
     }
 
 
@@ -587,17 +598,17 @@
 
     /**
      * [moveTile description]
-     * @param  {HTMLELement} tile      
+     * @param  {HTMLELement} tile
      * @param  {integer}     left      left of optimum insert point
      * @param  {object}      dragPoint { x: left of free-dragged tile
      *                                 , y: top        —⫵—           }
      */
     moveTile(tile, left, dragPoint) {
       let insertAt = this._mapPointToInsertPoint(tile, left)
-      // { left: corrected left of inserted tile + "px"
+      // { left: corrected left of inserted tile + "pxg"
       // , action: <moveLeft | moveRight | remove>}
 
-      this.dummy.style.left = insertAt.left  
+      this.dummy.style.left = insertAt.left
       this.shadowMap = this.slotMap.slice()
       if (tile.tileData.fromWord) {
         console.log("fromWord")
@@ -634,16 +645,18 @@
     _mapPointToInsertPoint(tile, left) {
       let insertAt = {
         index:  0
+      , left: 0
       , action: -1
       }
 
-      let offsetX = tile.tileData.offsetX
-      let charAdjust = Math.floor(-offsetX / this.charSize)
+      let offsetX     = tile.tileData.offsetX
+      let charAdjust  = Math.floor(-offsetX / this.charSize)
       let index = (left - offsetX - this.railLeft) / this.charSize
       index = Math.floor(index) - charAdjust
-      insertAt.left = (index * this.charSize) + "px"
+      insertAt.index  = index
+      insertAt.left   = (index * this.charSize) + "px"
 
-      let tileWidth = tile.tileData.charCount * this.charSize
+      let tileWidth   = tile.tileData.charCount * this.charSize
       let offsetRatio = offsetX / tileWidth
       insertAt.action = (offsetRatio)
 
@@ -736,7 +749,7 @@
     }
 
 
-    _moveOnBoard(dragPoint) { 
+    _moveOnBoard(dragPoint) {
       this.tile.style.left = dragPoint.x
       this.tile.style.top  = dragPoint.y
       this.tile.style.removeProperty("bottom")
@@ -751,7 +764,7 @@
     _replaceInDock() {
       // TODO: Move other tiles around in _moveInDock, so nothing
       // will need to be done here
-      
+
     }
 
 
@@ -764,7 +777,7 @@
 
     _setOffset(tile, event) {
       let rect = tile.getBoundingClientRect()
-      
+
       tile.tileData.offsetX = rect.left - event.pageX
       tile.tileData.offsetY = rect.top - event.pageY
     }
@@ -786,5 +799,5 @@
 
 
   lx.funetics = new Funetics(lx.json)
-  
+
 })(window.lexogram)
