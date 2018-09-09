@@ -241,8 +241,8 @@
         }
 
         this.tiles.push(tile)
-
-        console.log(tile.innerText, tile.tileData)
+//
+        // console.log(tile.innerText, tile.tileData)
       }
 
       this._shuffle(this.tiles)
@@ -386,6 +386,9 @@
         x += tile.tileData.offsetX
         x = Math.max(rect.left, Math.min(x, right))
 
+        // Is this the best place for this?
+        tile.style.removeProperty("bottom")
+
         return {
           x: x
         , y: this.height - rect.bottom
@@ -397,7 +400,7 @@
 
 
     moveTile(tile, point) {
-      console.log(tile.innerText, point)
+      // console.log(tile.innerText, point)
 
       tile.style.left = point.x + "px"
       tile.style.bottom = point.y + "px"
@@ -416,7 +419,7 @@
     initialize(tiles, totalChars) {
       super.initialize()
 
-      console.log("initialize")
+      // console.log("initialize")
 
       let charIndex = 0
       let tileData
@@ -433,7 +436,7 @@
           }
         )
 
-        console.log(tiles[ii].innerText, tileData)
+        // console.log(tiles[ii].innerText, tileData)
 
         charIndex += tileData.charCount
       }
@@ -476,6 +479,8 @@
       this.shadowMap = []
 
       // this.railLeft
+      // this.railTop
+      // this.railBottom
       // this.dummy
     }
 
@@ -509,11 +514,12 @@
       board = this.board.getBoundingClientRect()
       let width = (charCount * charSize)
       this.railLeft = (board.width - width) / 2
-      this.railBottom = (this.charSize * 2) + "px;"
+      this.railTop = board.height - (this.charSize * 3)
+      this.railBottom = (this.charSize * 2)
 
       this.rail.style = "left:" + this.railLeft + "px;"
                       + "width:" + width + "px;"
-                      + "bottom:" + this.railBottom
+                      + "bottom:" + this.railBottom + "px;"
                       + "height:" + charSize + "px;"
 
       let total = this.railElements.length
@@ -547,7 +553,7 @@
       let width = (tile.tileData.charCount * this.charSize) + "px;"
 
       tile.style = "left:" + left
-                 + "bottom:" + this.railBottom
+                 + "bottom:" + this.railBottom + "px;"
                  + "width:" + width
     }
 
@@ -599,30 +605,29 @@
     /**
      * [moveTile description]
      * @param  {HTMLELement} tile
-     * @param  {integer}     left      left of optimum insert point
+     * @param  {integer}     left      tile left constrained to rail
      * @param  {object}      dragPoint { x: left of free-dragged tile
      *                                 , y: top        —⫵—           }
      */
-    moveTile(tile, left, dragPoint) {
-      let insertAt = this._mapPointToInsertPoint(tile, left)
-      // { left: corrected left of inserted tile + "pxg"
-      // , action: <moveLeft | moveRight | remove>}
+    moveTile(tile, left, dragPoint, pageY) {
+      this._generateShadowMap(tile, dragPoint.x)
 
-      this.dummy.style.left = insertAt.left
-      this.shadowMap = this.slotMap.slice()
-      if (tile.tileData.fromWord) {
-        console.log("fromWord")
-        this.removeFromMap(tile, this.shadowMap)
-      }
+      // let insertAt = this._mapPointToInsertPoint(tile, left)
+      // // { left: corrected left of inserted tile + "pxg"
+      // // , action: <moveLeft | moveRight | remove>}
 
-      this._shiftExistingTiles(tile, insertAt)
+      // this.dummy.style.left = insertAt.left
+      // this.shadowMap = this.slotMap.slice()
+      // if (tile.tileData.fromWord) {
+      //   console.log("fromWord")
+      //   this.removeFromMap(tile, this.shadowMap)
+      // }
 
-      this._consoleMap(this.shadowMap)
+      // this._shiftExistingTiles(tile, insertAt)
 
-      tile.style.left = dragPoint.x
-      tile.style.top = dragPoint.y
+      // this._consoleMap(this.shadowMap)
 
-      tile.classList.add("translucent")
+      this._showAdjustedDrag(tile, dragPoint, pageY)
     }
 
 
@@ -642,26 +647,109 @@
     }
 
 
-    _mapPointToInsertPoint(tile, left) {
-      let insertAt = {
-        index:  0
-      , left: 0
-      , action: -1
+    /**
+     * Creates a single-use shadow version of slotMap, where tiles
+     * have been moved to allow the current `tile` to fit where the
+     * user wants it. The shadowMap will be used to place existing
+     * Word tiles and the dummy
+     *
+     * @param  {DIV element} tile
+     * @param  {integer}     left of freely dragged tile
+     * @return {[type]}      [description]
+     */
+    _generateShadowMap(tile, left) {
+      this.shadowMap = this.slotMap.slice()
+      this.removeFromMap(tile, this.shadowMap)
+
+      // Find which tile the mouse is pointing at, and which part
+      // of that tile it is pointing at
+      let mouseTileData = this._getMouseTileData(tile, left)
+
+      // console.log(mouseTileData)
+
+      switch (mouseTileData.action) {
+        case "fill":
+
+        break
+        case "moveRight":
+
+        break
+        case "moveLeft":
+
+        break
+        case "remove":
+
+      }
+    }
+
+
+    _getMouseTileData(tile, left) {
+      let mouseTileData = {
+        tile:      0
+      , charIndex: 0
+      , tileStart: 0
+      , action:    "remove" // may become moveRight | moveLeft | fill
       }
 
-      let offsetX     = tile.tileData.offsetX
-      let charAdjust  = Math.floor(-offsetX / this.charSize)
-      let index = (left - offsetX - this.railLeft) / this.charSize
-      index = Math.floor(index) - charAdjust
-      insertAt.index  = index
-      insertAt.left   = (index * this.charSize) + "px"
+      let x = left - tile.tileData.offsetX
+      let mouseIndex = (x - this.railLeft) / this.charSize
+      let charRatio = mouseIndex % 1
+      mouseIndex = mouseTileData.charIndex = Math.floor(mouseIndex)
 
-      let tileWidth   = tile.tileData.charCount * this.charSize
-      let offsetRatio = offsetX / tileWidth
-      insertAt.action = (offsetRatio)
+      let mouseTile = this.shadowMap[mouseIndex] // 0 | tile element
+      let mouseTileStart = mouseIndex
 
-      return insertAt
+      if (mouseTile) {
+        mouseTileStart = this.shadowMap.indexOf(mouseTile)
+        let mouseTileEnd   = this.shadowMap.lastIndexOf(mouseTile)
+        let mouseTileLength =  mouseTileEnd- mouseTileStart + 1
+
+        if (mouseTileLength === 1) {
+          if (charRatio < 0.33) {
+            mouseTileData.action = "moveRight"
+          } else if (charRatio > 0.67) {
+            mouseTileData.action = "moveLeft"
+          }
+
+        } else {
+          // Multi-char tile
+          if (mouseIndex === mouseTileStart && charRatio < 0.5) {
+            mouseTileData.action = "moveRight"
+          } else if (mouseIndex === mouseTileEnd && charRatio < 0.5) {
+            mouseTileData.action = "moveLeft"
+          }
+        }
+
+      } else {
+        mouseTileData.action = "fill"
+      }
+
+      mouseTileData.tile      = mouseTile
+      mouseTileData.tileStart = mouseTileStart
+
+      return mouseTileData
     }
+
+    // _mapPointToInsertPoint(tile, left) {
+    //   let insertAt = {
+    //     index:  0
+    //   , left: 0
+    //   , action: -1
+    //   }
+
+    //   let offsetX     = tile.tileData.offsetX
+    //   let charAdjust  = Math.floor(-offsetX / this.charSize)
+    //   let index = (left - offsetX - this.railLeft) / this.charSize
+    //   index = Math.floor(index) - charAdjust
+    //   insertAt.index  = index
+    //   insertAt.left   = (index * this.charSize) + "px"
+
+    //   let tileWidth   = tile.tileData.charCount * this.charSize
+    //   let offsetRatio = offsetX / tileWidth
+    //   insertAt.action = (offsetRatio)
+
+    //   return insertAt
+    // }
 
 
     _shiftExistingTiles(tile, insertAt) {
@@ -671,10 +759,31 @@
     }
 
 
+    _showAdjustedDrag(tile, dragPoint, pageY) {
+      let halfSize = this.charSize / 2
+      let tileHeight = tile.getBoundingClientRect().height
+      let y
+
+      if (pageY < (this.railTop + halfSize)) {
+        y = this.railTop - tileHeight + halfSize
+        y = Math.min(dragPoint.y, y)
+
+      } else {
+        y = this.railTop + tileHeight - halfSize * 2
+        y = Math.max(dragPoint.y, y)
+      }
+
+      tile.style.left = dragPoint.x + "px"
+      tile.style.top = y + "px"
+
+      // tile.classList.add("translucent")
+    }
 
     /// DEV TOOL // DEV TOOL // DEV TOOL // DEV TOOL // DEV TOOL ///
 
     _consoleMap(map) {
+      return
+
       if (!map) {
         map = this.slotMap
       }
@@ -716,7 +825,7 @@
       this.tile.tileData.inWord = !!railPoint
 
       if (railPoint) {
-        this.word.moveTile(this.tile, railPoint.x, dragPoint)
+        this.word.moveTile(this.tile, railPoint.x, dragPoint, y)
 
       } else if (railPoint = this.dock.mapToRail(this.tile, x, y)) {
         this.dock.moveTile(this.tile, railPoint)
@@ -728,7 +837,7 @@
 
 
     stopDrag() {
-      console.log("stopDrag", this.tile.tileData.inWord)
+      // console.log("stopDrag", this.tile.tileData.inWord)
 
       if (!this.moved) {
         if (!this.tile.tileData.inWord) {
@@ -743,15 +852,15 @@
       }
 
       this.tile.style.removeProperty("z-index")
-      this.tile.classList.remove("translucent")
+      // this.tile.classList.remove("translucent")
 
       this._destroy()
     }
 
 
     _moveOnBoard(dragPoint) {
-      this.tile.style.left = dragPoint.x
-      this.tile.style.top  = dragPoint.y
+      this.tile.style.left = dragPoint.x + "px"
+      this.tile.style.top  = dragPoint.y + "px"
       this.tile.style.removeProperty("bottom")
     }
 
@@ -768,11 +877,6 @@
     }
 
 
-    _snapToNearbyTiles() {
-      console.log("TODO: Check if tile should snap to another tile")
-    }
-
-
     // UTILITIES // UTILITIES // UTILITIES // UTILITIES // UTILITIES /
 
     _setOffset(tile, event) {
@@ -785,8 +889,8 @@
 
     _getDragPoint(tile, x, y) {
       return {
-        x: (x + this.tile.tileData.offsetX) + "px"
-      , y: (y + this.tile.tileData.offsetY) + "px"
+        x: (x + this.tile.tileData.offsetX)
+      , y: (y + this.tile.tileData.offsetY)
       }
     }
 
