@@ -75,7 +75,7 @@
     }
   , "clanger": {
       "phonemes": [
-        "c|l|a|ng|er"
+        "c|l|a|n-g|er"
       , "k|l|æ|ŋ|ə(ɹ)"
       ]
     , "anagram": {
@@ -98,7 +98,8 @@
       }
       , "miss": {
         "range": [ "ɹeɪnʤ" ]
-      , "anger": [ "æŋɡə(ɹ)" ]
+      , "anger": [ "æŋgə(ɹ)" ]
+      , "angler": [ "æŋglə(ɹ)" ]
       }
     }
   , "anger": {
@@ -219,6 +220,31 @@
       , "miss": {
           "viːl": [ "veal" ]
         , "liː": [ "lea" ]
+        }
+      }
+    }
+  , "cleave": {
+      "phonemes": [
+        "c|l|ea.e|v"
+      , "k|l|iː|v"
+      ]
+    , "anagram": {
+        "alphabet": [
+          "cleave"
+        , "leave"
+        ]
+      , "IPA": [
+          "kliːv"
+        , "liːv"
+        ]
+      , "url": [
+         // TODO
+        ]
+      , "miss": {
+          "viːl": [ "veal" ]
+        , "liː": [ "lea", "lee" ]
+        , "liːk": [ "leak" ]
+        , "kiːl": [ "keel" ]
         }
       }
     }

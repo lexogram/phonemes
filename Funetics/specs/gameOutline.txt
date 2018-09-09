@@ -74,3 +74,13 @@ For any tile t with first char index c and n chars:
     + (n * tileWidth) / 2)
   /
   dockWidth
+
+
+Smart dragging on Word rail
+———————————————————————————
+
+If the tile is dragged over the word rail, it partly obscures the tiles already on the rail. If the cursor is in the lower part of the rail, the tile should appear below the middle; if the cursor is in the upper part, the tile should appear above the middle.
+
+To determine where to make the adjustment, we need to know
+* pageY
+* dragPoint.y (proposed top of tile)

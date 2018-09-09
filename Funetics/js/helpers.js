@@ -35,6 +35,15 @@
   }
 
 
+  if (!Array.prototype.getUnique) {
+    Array.prototype.getUnique = function(includeFalsy) {
+      return this.filter((item, index, array) => {
+        return (item || includeFalsy) && array.indexOf(item) === index
+      })
+    }
+  }
+
+
   // EVENTS // EVENTS // EVENTS // EVENTS // EVENTS // EVENTS //
 
 
