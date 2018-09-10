@@ -136,7 +136,7 @@ span.plain:last-child {
   );
 }
 
-.dock {
+.dock-rail {
   position: absolute;
   left: 0;
   bottom: 0;
@@ -145,7 +145,7 @@ span.plain:last-child {
   background-color: #030;
 }
 
-.word {
+.word-rail {
   position: absolute;
   bottom: 25vh;
   height: 25vh;
@@ -157,12 +157,65 @@ span.plain:last-child {
   background-color: rgb(255, 255, 255, 0.1); 
 }
 
-.word div {
+.word-rail div {
   height: 5%;
   border: 0.02em solid #ff0;
   border-top: none;
 }
 
-.translucent {
-  opacity: 0.5;
+/* Status highlighting */
+
+.best span.plain {
+  background-color: #edb;
+  border-top-color: #dca;
+  border-bottom-color: #a97;
+}
+
+.best span.plain:first-child {
+  border-left-color: #cb9;
+}
+
+.best span.plain:last-child {
+  border-right-color: #ba8;
+}
+
+.good span.plain {
+  background-color: #deb;
+  border-top-color: #cda;
+  border-bottom-color: #9a7;
+}
+
+.good span.plain:first-child {
+  border-left-color: #bc9;
+}
+
+.good span.plain:last-child {
+  border-right-color: #ab8;
+}
+
+.word span.plain,
+.sound span.plain {
+  background-color: #fff;
+  border-top-color: #c90;
+  border-bottom-color: #960;
+}
+
+.word span.plain:first-child,
+.sound span.plain:first-child {
+  border-left-color: #b80;
+}
+
+.word span.plain:last-child,
+.sound span.plain:last-child {
+  border-right-color: #a70;
+}
+
+.word span.phoneme {
+  color: #900;
+  background-color: rgb(255, 192, 0, 0.5);
+}
+
+.sound span.plain {
+  color: #900;
+  background-color: #fcc;
 }

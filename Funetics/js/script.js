@@ -40,8 +40,14 @@
       this.wordData.setInterface(callback)
 
       callback = this.wordData.getCallbacks()
-      // { getNextWord: <function>, checkWord: <function> }
+      // { getNextWord: <function>
+      // , checkWord: <function> }
       this.board.setInterface(callback)
+
+      // { getNextWord: <function>
+      // , checkWord: <function>
+      // , showStatus: <function> }
+      this.feedback.setInterface(callback)
 
       callback.getNextWord()
     }
@@ -57,16 +63,25 @@
 
   class Feedback {
     constructor() {
-
+      // this.showStatus
     }
 
 
-    show(status, word, ipa) {
-      console.log(
-        "Feedback — status: " + status
-      + ", word: '" + word
-      + "', ipa: /" + ipa + "/"
-      )
+    setInterface(callbacks) {
+      this.showStatus = callbacks.showStatus
+    }
+
+
+    show(status, word, ipa, tiles) {
+      if (status) {
+        console.log(
+          "Feedback — status: " + status
+        + ", word: '" + word
+        + "', ipa: /" + ipa + "/"
+        )
+      }
+
+      this.showStatus(status, tiles)
     }
   }
 
@@ -98,7 +113,7 @@
 
     getNextWord(word) {
       //// <<< HARD-CODED
-      word ? null : word = "clanger" // "cleave" //
+      word ? null : word = "danger" // "cleave" //
       //// HARD-CODED >>>>
 
       this.bestLength = word.length
@@ -108,7 +123,7 @@
     }
 
 
-    checkWord(word, ipa) {
+    checkWord(word, ipa, tiles) {
       let anagram = this.wordData.anagram
       let stripped = word.replace(" ", "")
 
@@ -142,9 +157,9 @@
 
       if (stripped && status) {
         status = "strip"
-      } else if (status) {
-        this.feedback(status, word, ipa)
-      }
+      } 
+
+      this.feedback(status, word, ipa, tiles)
 
       return status
     }
@@ -169,6 +184,11 @@
     setInterface(callbacks) {
       this.getNextWord = callbacks.getNextWord
       this.wordRail.setInterface(callbacks.checkWord)
+
+      Object.assign(callbacks, {
+        showTiles: this.showTiles.bind(this)
+      , showStatus: this.showStatus.bind(this)
+      })
     }
 
 
@@ -190,14 +210,29 @@
     showTiles(wordData) {
       this.tileFactory.generateTiles(wordData)
 
-      let tiles = this.tileFactory.tiles
+      this.tiles = this.tileFactory.tiles
       let charCount = this.tileFactory.charCount
 
       empty(this.board)
-      this.dockRail.initialize(tiles, charCount)
+      this.dockRail.initialize(this.tiles, charCount)
       this.wordRail.initialize(charCount)
 
       this._updatePositions()
+    }
+
+
+    showStatus(status) { //, tiles) {
+      // console.log(tiles.map((tile) => {
+      //   return tile.innerText.replace(/\n.+/, "")
+      // }))
+
+      this.tiles.forEach((tile) => {
+        tile.classList.remove("best","good","word","sound","strip")
+
+        if (status && tile.tileData.inWord) {
+          tile.classList.add(status)
+        }
+      })
     }
 
 
@@ -431,7 +466,7 @@
     constructor(board, type) {
       this.board = board
       this.rail = document.createElement("div")
-      this.rail.classList.add("rail", type)
+      this.rail.classList.add(type + "-rail")
 
       // this.height
     }
@@ -647,9 +682,9 @@
         this.slotMap = this.shadowMap.slice()
       }
 
-      let tileArray = this.slotMap.getUnique()
+      let tiles = this.slotMap.getUnique()
 
-      tileArray.forEach((tile) => {
+      tiles.forEach((tile) => {
         let index = this.slotMap[tile]
         this.setTilePosition(tile, index)
       })
@@ -732,9 +767,12 @@
 
 
     checkWord() {
-      let tileArray = this.slotMap.getUnique(true)
+      let tiles = this.slotMap.getUnique(true)
+      let index
 
-      let word = tileArray.reduce(function(string, tile) {
+      // TODO: the reduce function will need to be revised for
+      // vowel tiles that embrace consonants, like "i.e" in "like"
+      let word = tiles.reduce((string, tile) => {
         if (tile) {
           string += tile.innerText.replace(/\n.*/, "")
         } else {
@@ -744,9 +782,19 @@
         return string
       }, "")
 
-      let wordStatus = this.checkWordCallback(word.trim())
+      let ipa = tiles.reduce((string, tile) => {
+        if (tile) {
+          string += tile.innerText.replace(/^.+\n/, "")
+        }
 
-      console.log(wordStatus)
+        return string
+      }, "")
+
+      while ((index = tiles.indexOf(0)) > -1) {
+        tiles.splice(index, 1)
+      }
+
+      this.checkWordCallback(word.trim(), ipa, tiles)
     }
 
 
@@ -1150,9 +1198,9 @@
         return console.log("No shadowMap")
       }
 
-      let tileArray = this.slotMap.getUnique()
+      let tiles = this.slotMap.getUnique()
 
-      tileArray.forEach((tile) => {
+      tiles.forEach((tile) => {
         let shadowIndex = this.shadowMap.indexOf(tile)
         let left
 
