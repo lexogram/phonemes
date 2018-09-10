@@ -72,7 +72,7 @@
     }
 
 
-    show(status, word, ipa, tiles) {
+    show(status, word, ipa) {
       if (status) {
         console.log(
           "Feedback — status: " + status
@@ -81,7 +81,7 @@
         )
       }
 
-      this.showStatus(status, tiles)
+      this.showStatus(status, word, ipa)
     }
   }
 
@@ -113,7 +113,7 @@
 
     getNextWord(word) {
       //// <<< HARD-CODED
-      word ? null : word = "danger" // "cleave" //
+      word ? null : word = "clanger" // "cleave" //
       //// HARD-CODED >>>>
 
       this.bestLength = word.length
@@ -123,7 +123,7 @@
     }
 
 
-    checkWord(word, ipa, tiles) {
+    checkWord(word, ipa) {
       let anagram = this.wordData.anagram
       let stripped = word.replace(" ", "")
 
@@ -159,7 +159,7 @@
         status = "strip"
       } 
 
-      this.feedback(status, word, ipa, tiles)
+      this.feedback(status, word, ipa)
 
       return status
     }
@@ -221,10 +221,7 @@
     }
 
 
-    showStatus(status) { //, tiles) {
-      // console.log(tiles.map((tile) => {
-      //   return tile.innerText.replace(/\n.+/, "")
-      // }))
+    showStatus(status, word, ipa) {
 
       this.tiles.forEach((tile) => {
         tile.classList.remove("best","good","word","sound","strip")
@@ -790,11 +787,7 @@
         return string
       }, "")
 
-      while ((index = tiles.indexOf(0)) > -1) {
-        tiles.splice(index, 1)
-      }
-
-      this.checkWordCallback(word.trim(), ipa, tiles)
+      this.checkWordCallback(word.trim(), ipa)
     }
 
 

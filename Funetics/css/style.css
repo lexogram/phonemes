@@ -219,3 +219,16 @@ span.plain:last-child {
   color: #900;
   background-color: #fcc;
 }
+
+.strip span.plain {
+  color: #009;
+  background-color: #ccf;
+}
+
+.strip span.plain:first-child {
+  border-left-color: #9bc;
+}
+
+.strip span.plain:last-child {
+  border-right-color: #8ab;
+}

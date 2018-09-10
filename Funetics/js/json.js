@@ -75,7 +75,7 @@
     }
   , "clanger": {
       "phonemes": [
-        "c|l|a|n-g|er"
+        "c|l|a|ng|er"
       , "k|l|æ|ŋ|ə(ɹ)"
       ]
     , "anagram": {
@@ -138,16 +138,12 @@
         , "deɪn"
         ]
       , "url": [
-          { "images": "https://www.google.com/search?q=danger&tbm=isch"
-          , "meaning": "https://en.wiktionary.org/wiki/danger#English"
-          , "usage": "https://tatoeba.org/eng/sentences/search?query=danger&from=eng&to=rus"}
-        , { "images": "https://www.google.com/search?q=dane&tbm=isch"
-          , "meaning": "https://en.wiktionary.org/wiki/dane#English"
-          , "usage": "https://tatoeba.org/eng/sentences/search?query=dane&from=eng&to=rus"}
+          // TODO
         ]
       }
     , "miss": {
         "gander": [ "gændə(ɹ)" ]
+      , "anger": [ "æŋgə(ɹ)" ]
       , "dan": [ "dæn" ]
       , "and": [ "ænd" ]
       , "ad":   [ "æd" ]
