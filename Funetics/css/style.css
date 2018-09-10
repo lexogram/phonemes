@@ -163,16 +163,6 @@ span.plain:last-child {
   border-top: none;
 }
 
-.word div.dummy {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  height: 100%;
-  width:  20%;
-  border: none;
-  background: #660;
-}
-
 .translucent {
   opacity: 0.5;
 }

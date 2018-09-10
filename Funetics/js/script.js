@@ -430,9 +430,10 @@
 
         Object.assign(
           tileData
-        , { tileIndex: ii
-          , charIndex: charIndex
-          , inWord:    false
+        , { tileIndex:     ii
+          , charIndex:     charIndex
+          , inWord:        false
+          , previewOnDock: false
           }
         )
 
@@ -646,7 +647,7 @@
       })
 
       if (revert) {
-        this.updateTiles(revert)
+        this.updateTiles(revert !== "slotMap")
       }
     }
 
@@ -1059,7 +1060,7 @@
 
         if (this.slotMap.indexOf(tile) !== shadowIndex) {
           if (shadowIndex < 0) {
-            tile.tileData.inWord = false
+            tile.tileData.previewOnDock = true
           } else {
             left = this.railLeft + shadowIndex * this.charSize + "px"
             tile.style.left = left
@@ -1166,7 +1167,7 @@
       } else if (this.tile.tileData.inWord) {
         this.word.updateTiles()
       } else {
-        // this.word.removeFromMap(this.tile)
+        this.word.removeFromMap(this.tile, "slotMap")
         // this.word.updateTiles()
         this.dock.setTilePosition(this.tile)
       }
