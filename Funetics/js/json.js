@@ -21,21 +21,21 @@
     , "anagram": {
         "alphabet": [
           "time"
-        , "tie"
         , "mite"
+        , "tie"
         ]
-      , "IPA": [
+      , "ipa": [
           "taɪm"
-        , "taɪ"
         , "maɪt"
+        , "taɪ"
         ]
       , "url": [
           { "images": "https://www.google.com/search?q=time&tbm=isch"
           , "meaning": "https://en.wiktionary.org/wiki/time#English"
           , "usage": "https://tatoeba.org/eng/sentences/search?query=time&from=eng&to=rus"}
-        , { "images": "https://www.google.com/search?q=tie&tbm=isch"
-          , "meaning": "https://en.wiktionary.org/wiki/tie#English"
-          , "usage": "https://tatoeba.org/eng/sentences/search?query=tie&from=eng&to=rus"}
+        , { "images": "https://www.google.com/search?q=mite&tbm=isch"
+          , "meaning": "https://en.wiktionary.org/wiki/mite#English"
+          , "usage": "https://tatoeba.org/eng/sentences/search?query=mite&from=eng&to=rus"}
         , { "images": "https://www.google.com/search?q=tie&tbm=isch"
           , "meaning": "https://en.wiktionary.org/wiki/tie#English"
           , "usage": "https://tatoeba.org/eng/sentences/search?query=tie&from=eng&to=rus"}
@@ -55,7 +55,7 @@
           "chaste"
         , "chase"
         ]
-      , "IPA": [
+      , "ipa": [
           "ʧeɪst"
         , "ʧeɪs"
         ]
@@ -83,7 +83,7 @@
           "clanger"
         , "lac"
         ]
-      , "IPA": [
+      , "ipa": [
           "klæŋə(ɹ)"
         , "læk"
         ]
@@ -111,7 +111,7 @@
         "alphabet": [
           "anger"
          ]
-      , "IPA": [
+      , "ipa": [
           "æŋgə(ɹ)"
         ]
       , "url": [
@@ -133,7 +133,7 @@
           "danger"
         , "Dane"
         ]
-      , "IPA": [
+      , "ipa": [
           "deɪnʤə(ɹ)"
         , "deɪn"
         ]
@@ -161,7 +161,7 @@
           "range"
         , "rage"
         ]
-      , "IPA": [
+      , "ipa": [
           "ɹeɪnʤ"
         , "ɹeɪʤ"
         ]
@@ -188,7 +188,7 @@
         "alphabet": [
           "league"
         ]
-      , "IPA": [
+      , "ipa": [
           "liːg"
         ]
       , "url": [
@@ -209,7 +209,7 @@
         "alphabet": [
           "leave"
         ]
-      , "IPA": [
+      , "ipa": [
           "liːv"
         ]
       , "url": [
@@ -233,7 +233,7 @@
           "cleave"
         , "leave"
         ]
-      , "IPA": [
+      , "ipa": [
           "kliːv"
         , "liːv"
         ]
@@ -258,7 +258,7 @@
   //         "xxx"
   //       , "xxx"
   //       ]
-  //     , "IPA": [
+  //     , "ipa": [
   //         "xxx"
   //       , "xxx"
   //       ]

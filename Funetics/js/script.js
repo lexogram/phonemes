@@ -27,19 +27,23 @@
 
   class Funetics {
     constructor(data) {
-      this.wordData = new WordData(data)
+      this.feedback = new Feedback()
+
+      let callback = this.feedback.show.bind(this.feedback)
+      this.wordData = new WordData(data, callback)
 
       let boardDiv = document.body.querySelector(".board")
       this.board   = new Board(boardDiv)
 
       // Exchange interfaces
-      let callback = this.board.showTiles.bind(this.board)
+      callback = this.board.showTiles.bind(this.board)
       this.wordData.setInterface(callback)
 
-      callback = this.wordData.getNextWord.bind(this.wordData)
+      callback = this.wordData.getCallbacks()
+      // { getNextWord: <function>, checkWord: <function> }
       this.board.setInterface(callback)
 
-      callback()
+      callback.getNextWord()
     }
 
 
@@ -51,14 +55,44 @@
 
 
 
+  class Feedback {
+    constructor() {
+
+    }
+
+
+    show(status, word, ipa) {
+      console.log(
+        "Feedback — status: " + status
+      + ", word: '" + word
+      + "', ipa: /" + ipa + "/"
+      )
+    }
+  }
+
+
+
   class WordData {
-    constructor(data) {
+    constructor(data, feedback) {
       this.data = data
+      this.feedback = feedback
+
+      // this.wordData
+      // this.bestLength
+      // this.misses
     }
 
 
     setInterface(callback) {
       this.callback = callback
+    }
+
+
+    getCallbacks() {
+      return {
+        getNextWord: this.getNextWord.bind(this)
+      , checkWord: this.checkWord.bind(this)
+      }
     }
 
 
@@ -67,30 +101,74 @@
       word ? null : word = "clanger" // "cleave" //
       //// HARD-CODED >>>>
 
-      let wordData = this.data[word]
-      this.callback(wordData)
+      this.bestLength = word.length
+      this.wordData = this.data[word]
+      this.misses = Object.keys(this.wordData.miss)
+      this.callback(this.wordData)
+    }
+
+
+    checkWord(word, ipa) {
+      let anagram = this.wordData.anagram
+      let stripped = word.replace(" ", "")
+
+      stripped = word === stripped
+               ? false
+               : !!(word = stripped) // word has no spaces; true
+
+      let status = anagram.alphabet.indexOf(word)
+      let temp
+
+      if (status > -1) {
+        ipa = anagram.ipa[status]
+        temp = anagram.url[status]
+
+        if (word.length === this.bestLength) {
+          status = "best"
+        } else {
+          status = "good"
+        }
+
+      } else if (temp = this.wordData.miss[word]) {
+        ipa = temp
+        status = !stripped && "word"
+
+      } else if (word = this.wordData.miss[ipa]) {
+        status = !stripped && "sound"
+
+      } else {
+        status = false
+      }
+
+      if (stripped && status) {
+        status = "strip"
+      } else if (status) {
+        this.feedback(status, word, ipa)
+      }
+
+      return status
     }
   }
 
 
 
   class Board {
-    constructor(board, getNextWord){
+    constructor(board){
       this.board = board
-      this.getNextWord = getNextWord
 
       this.wordRail = new Word(board)
       this.dockRail = new Dock(board)
       this.tileFactory  = new TileFactory(board)
 
-      // this.callback
+      // this.getNextWord => WordData.getNextWord
 
       this._listenForEvents()
     }
 
 
-    setInterface(callback) {
-      this.callback = callback
+    setInterface(callbacks) {
+      this.getNextWord = callbacks.getNextWord
+      this.wordRail.setInterface(callbacks.checkWord)
     }
 
 
@@ -241,8 +319,6 @@
         }
 
         this.tiles.push(tile)
-//
-        // console.log(tile.innerText, tile.tileData)
       }
 
       this._shuffle(this.tiles)
@@ -471,10 +547,11 @@
   class Word extends Rail {
     constructor(board) {
       super(board, "word")
+
       // this.board
       // this.rail
       // this.height
-
+      // 
       this.railElements = []
       this.slotMap = []
       this.shadowMap = []
@@ -483,7 +560,13 @@
       // this.railTop
       // this.railBottom
       // this.charCount
-      // this.dummy
+
+      // this.checkWordCallback => WordData.checkWord
+    }
+
+
+    setInterface(checkWord) {
+      this.checkWordCallback = checkWord
     }
 
 
@@ -505,10 +588,6 @@
         this.railElements.push(element)
         this.rail.appendChild(element)
       }
-
-      this.dummy = document.createElement("div")
-      this.dummy.classList.add("dummy")
-      this.rail.appendChild(this.dummy)
     }
 
 
@@ -652,11 +731,30 @@
     }
 
 
+    checkWord() {
+      let tileArray = this.slotMap.getUnique(true)
+
+      let word = tileArray.reduce(function(string, tile) {
+        if (tile) {
+          string += tile.innerText.replace(/\n.*/, "")
+        } else {
+          string += " "
+        }
+
+        return string
+      }, "")
+
+      let wordStatus = this.checkWordCallback(word.trim())
+
+      console.log(wordStatus)
+    }
+
+
     /**
      * Creates a single-use shadow version of slotMap, where tiles
      * have been moved to allow the current `tile` to fit where the
      * user wants it. The shadowMap will be used to place existing
-     * Word tiles and the dummy
+     * Word tiles.
      *
      * @param  {DIV element} tile
      * @param  {integer}     left of freely dragged tile
@@ -1114,11 +1212,12 @@
 
 
   class TileMove {
-    constructor (tile, event, dock, word) {
+    constructor (tile, event, dock, word, checkWord) {
       this.tile = tile
       this._setOffset(tile, event)
       this.dock = dock
       this.word = word
+      this.checkWord = checkWord
 
       this.word.checkIfTileIsOnRail(tile)
 
@@ -1157,8 +1256,6 @@
 
 
     stopDrag() {
-      // console.log("stopDrag", this.tile.tileData.inWord)
-
       if (!this.moved) {
         if (!this.tile.tileData.inWord) {
           this.word.findFirstEmptyPlaceFor(this.tile)
@@ -1166,14 +1263,14 @@
 
       } else if (this.tile.tileData.inWord) {
         this.word.updateTiles()
+
       } else {
         this.word.removeFromMap(this.tile, "slotMap")
-        // this.word.updateTiles()
         this.dock.setTilePosition(this.tile)
       }
 
       this.tile.style.removeProperty("z-index")
-      // this.tile.classList.remove("translucent")
+      this.word.checkWord()
 
       this._destroy()
     }
@@ -1183,18 +1280,6 @@
       this.tile.style.left = dragPoint.x + "px"
       this.tile.style.top  = dragPoint.y + "px"
       this.tile.style.removeProperty("bottom")
-    }
-
-
-    _snapToNearbyTiles() {
-      console.log("TODO: Check if tile should snap to another tile")
-    }
-
-
-    _replaceInDock() {
-      // TODO: Move other tiles around in _moveInDock, so nothing
-      // will need to be done here
-
     }
 
 
