@@ -64,7 +64,7 @@
 
     getNextWord(word) {
       //// <<< HARD-CODED
-      word ? null : word = "clanger" // "cleave" // 
+      word ? null : word = "clanger" // "cleave" //
       //// HARD-CODED >>>>
 
       let wordData = this.data[word]
@@ -473,7 +473,7 @@
       // this.board
       // this.rail
       // this.height
-      
+
       this.railElements = []
       this.slotMap = []
       this.shadowMap = []
@@ -562,7 +562,7 @@
     }
 
 
-    updateTiles(revert) { 
+    updateTiles(revert) {
       if (!revert) {
         this.slotMap = this.shadowMap.slice()
       }
@@ -710,7 +710,7 @@
       , action:      "remove" // moveRight | moveLeft | fill
       // Inserted tile
       , insertStart: 0
-      , insertEnd:   0 
+      , insertEnd:   0
       }
 
       // Data about the existing tile under the mouse
@@ -764,16 +764,26 @@
     }
 
 
+    /**
+     * Triggered by moveTile when the mouse is over an empty slot.
+     * Places the tile so that part of it is in the slot under the
+     * mouse. May adjust the tile's position and/or move other tiles
+     * to make space.
+     *
+     * @param  {DIV element} tile          div.tile-set to be placed
+     * @param  {object map}  mouseTileData see _getMouseTileData()
+     */
     _fillEmptySlot(tile, mouseTileData) {
       // Check if there is space from insertStart to insertEnd
       let result = this._fillSlotsIfPossible(
         tile
       , mouseTileData.insertStart
       , mouseTileData.insertEnd
-      )
+      ) // <integer blocked slot index | shadowMap>
 
       // Check if there is space around mTD.slotIndex
       if (!isNaN(result)) {
+        // result is integer blocked slot index
         result = this._findSpaceIfPossible(
           tile
         , mouseTileData.slotIndex
@@ -790,21 +800,32 @@
         , result
         )
       }
-      // If one side is blocked, shift tiles on that side 
+      // If one side is blocked, shift tiles on that side
 
 
       this.shadowMap = result
     }
 
 
+    /**
+     * Simplest case: attempts to place the tile to fill all the slots
+     * that it is dragged to
+     *
+     * @param  {DIV element}  tile      div.tile-set to be placed
+     * @param  {integer}      startSlot index of first slot to fill
+     * @param  {integer}      endSlot   index of last slot to fill
+     *
+     * @return {int or array}           [<0|tile>, ...] if successful
+     *                                  index of existing tile, if not
+     */
     _fillSlotsIfPossible(tile, startSlot, endSlot) {
       let shadowMap = this.shadowMap.slice()
 
       for ( let ii = startSlot; ii < endSlot + 1; ii += 1 ) {
         if (shadowMap[ii]) {
           return ii
-      
-        } else {  
+
+        } else {
           shadowMap[ii] = tile
         }
       }
@@ -813,6 +834,21 @@
     }
 
 
+    /**
+     * Second simplest case: checks if there are enough empty slots
+     * around mouseSlot to place the tile. If so, returns a shadowMap
+     * array, if not, returns an object indicating the extent of the
+     * free space
+     *
+     *
+     * @param  {DIV element}   tile  div.tile-set to be placed
+     * @param  {integer}   mouseSlot index of slot under mouse
+     * @param  {integer}   startSlot index of leftmost possible slot
+     * @param  {integer} blockedSlot index of slot with tile
+     *
+     * @return {obj or array}           [<0|tile>, ...] if successful
+     *                      or, if not: { left: <int>, right: <int>}
+     */
     _findSpaceIfPossible(tile, mouseSlot, startSlot, blockedSlot) {
       let result = this.shadowMap.slice()
       let charCount = tile.tileData.charCount
@@ -820,7 +856,9 @@
       if (blockedSlot < mouseSlot) {
         // There's a tile to the left blocking insertion. Find the
         // leftmost empty slot from mouseSlot
-        for ( startSlot = mouseSlot-1; startSlot ; startSlot -= 1 ) {
+
+        startSlot = mouseSlot - 1
+        for ( ; startSlot > -1 ; startSlot -= 1 ) {
           if (result[startSlot]) {
             startSlot += 1
             // We don't know yet if there is enough space to the right
@@ -831,11 +869,12 @@
       } else {
         // There's a tile to the right blocking insertion. Check if
         // there are charCount spaces to the left of blockedSlot
-        let tooFar = blockedSlot - charCount   
+        let tooFar = blockedSlot - charCount - 1
+
         for ( ; startSlot > tooFar ; startSlot -= 1 ) {
-          if (result[startSlot]) {
+          if ((startSlot < 0) || result[startSlot]) {
             // The gap is too small
-            result = { left: startSlot - 1, right: blockedSlot - 1 }
+            result = { left: startSlot + 1, right: blockedSlot - 1 }
             return result
           }
         }
@@ -889,7 +928,7 @@
         space = freeSlots.right
         spaces = [] // There must be a space further to the right
 
-        while (space && spaceNeeded) {
+        while (spaceNeeded) {
           space = shadowMap.indexOf(0, space + 1)
           if (space < 0) {
             space = spaces.pop()
