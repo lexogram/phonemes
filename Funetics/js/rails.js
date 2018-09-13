@@ -772,7 +772,7 @@
 
       if (moreSpace = spaceData.spaceStillNeeded) {
         spaceData = this._spaceToLeft(wordTile, moreSpace)
-        this._moveTilesLeft(spaceData.space.wordTile)
+        this._moveTilesLeft(spaceData.space, wordTile)
         insertStart -= moreSpace
       }
 
@@ -794,11 +794,11 @@
       }
 
       this._moveTilesLeft(spaceData.space, wordTile)
-      insertStart += spaceData.spacesFound - 1
+      insertStart -= (spaceData.spacesFound - 1)
 
       if (moreSpace = spaceData.spaceStillNeeded) {
         spaceData = this._spaceToRight(wordTile, moreSpace)
-        this._moveTilesRight(spaceData.space.wordTile)
+        this._moveTilesRight(spaceData.space, wordTile)
       }
 
       for ( let ii = 0; ii < charCount; ii += 1 ) {
