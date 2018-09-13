@@ -158,7 +158,7 @@ function empty(element) {
 
       if (stripped && status) {
         status = "strip"
-      } 
+      }
 
       this.feedback(status, word, ipa)
 

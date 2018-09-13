@@ -599,27 +599,46 @@
 
 
     _makeSpace(tile, mouseTileData, freeSlots) {
-      let charCount   = tile.tileData.charCount
-      let startSlot   = freeSlots.left
+      // mouseTileData = {
+      // // Existing tile under the mouse
+      //   slotIndex:   integer slot under mouse
+      // , tile:        0 // tile already in slot under mouse
+      // , tileStart:   same as slotIndex, because tile is 0
+      // , action:      "fill"
+      // // Inserted tile
+      // , insertStart: integer ≤ slotIndex
+      // , insertEnd:   integer ≥ slotIndex
+      // }
+
+      // freeslots = {
+      //   left:  leftmost empty slot adjacent to slotIndex
+      // , right: rightmost empty slot adjacent to slotIndex
+      // }
+
+      let charCount = tile.tileData.charCount
+      let startSlot = freeSlots.left
       let spaceNeeded = charCount - 1 - freeSlots.right + startSlot
+      let toRight = this._checkSpaceToRight(mouseTileData, freeSlots)
+      let toLeft = spaceNeeded - toRight.spacesFound
       
-      let spaceData = this._spaceToLeft(startSlot, spaceNeeded)
+      let spaceData = this._spaceToLeft(startSlot, toLeft)
 
       // undefined  | {
       //   space: space
       // , spacesFound: spacesNeeded - spacesToFind
       // , spaceStillNeeded: spacesToFind }
 
-      if (spaceData) {
+      if (spaceData && spaceData.spacesFound) {
         startSlot = this._moveTilesLeft(spaceData.space, startSlot-1)
         spaceNeeded = spaceData.spaceStillNeeded
+
+      } else {
+        toRight = this._spaceToRight(freeSlots.right, spaceNeeded)
       }
 
       if (spaceNeeded) {
-        spaceData = this._spaceToRight(freeSlots.right, spaceNeeded)
-
         this._moveTilesRight(
-          spaceData.space
+          toRight.space
         , freeSlots.right + 1
         )
       }
@@ -788,6 +807,15 @@
     }
 
 
+    _checkSpaceToRight(mouseTileData, freeSlot) {
+      let wanted = mouseTileData.insertEnd + freeSlot.left
+                 - mouseTileData.slotIndex - freeSlot.right
+      let found  = this._spaceToRight(freeSlot.right, wanted)
+
+      return found || { spacesFound: 0 }
+    }
+
+
     _spaceToLeft(space, spacesNeeded) {
       let result
       let spaces = []
@@ -854,6 +882,9 @@
 
       return result
     }
+
+
+
 
 
     // REMOVE // REMOVE // REMOVE // REMOVE // REMOVE // REMOVE //
