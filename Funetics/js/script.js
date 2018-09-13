@@ -204,7 +204,7 @@ function empty(element) {
         return
       }
 
-      new TileMove(tile, event, this.dockRail, this.wordRail)
+      this.movingTile = new TileMove(tile, event, this.dockRail, this.wordRail)
     }
 
 
@@ -470,6 +470,8 @@ function empty(element) {
 
       this.word.checkIfTileIsOnRail(tile)
 
+      console.log("Tile is on rail?", tile.tileData.fromWord)
+
       this.tile.style.zIndex = "99"
       this.moved = false
 
@@ -514,7 +516,7 @@ function empty(element) {
         this.word.updateTiles()
 
       } else {
-        this.word.removeFromMap(this.tile, "slotMap")
+        this.word.removeFromMap(this.tile, "removeFromWord")
         this.dock.setTilePosition(this.tile)
       }
 

@@ -138,7 +138,7 @@
       // this.board
       // this.rail
       // this.height
-      // 
+      
       this.railElements = []
       this.slotMap = []
       this.shadowMap = []
@@ -229,8 +229,8 @@
     }
 
 
-    updateTiles(revert) {
-      if (!revert) {
+    updateTiles(ignoreShadowMap) {
+      if (!ignoreShadowMap) {
         this.slotMap = this.shadowMap.slice()
       }
 
@@ -303,17 +303,19 @@
     }
 
 
-    removeFromMap(tile, revert) {
-      tile.tileData.fromWord = false
+    removeFromMap(tile, ignoreShadowMap) {
+      let index
 
-      this.shadowMap.forEach((slotItem, index, array) => {
-        if (slotItem === tile) {
-          array[index] = 0
-        }
-      })
+      while ((index = this.shadowMap.indexOf(tile)) > -1) {
+        this.shadowMap[index] = 0
+      }
 
-      if (revert) {
-        this.updateTiles(revert !== "slotMap")
+      if (ignoreShadowMap) {
+        this.updateTiles(!tile.tileData.fromWord)
+      }
+
+      if (ignoreShadowMap === "removeFromWord") {
+        tile.tileData.fromWord = false
       }
     }
 
@@ -358,7 +360,7 @@
      */
     _generateShadowMap(tile, pageX) {
       this.shadowMap = this.slotMap.slice()
-      this.removeFromMap(tile) //, this.shadowMap)
+      this.removeFromMap(tile)
 
       // Find which tile the mouse is pointing at, and which part
       // of that tile it is pointing at
@@ -377,10 +379,10 @@
           this._fillEmptySlot(tile, mouseTileData)
         break
         case "moveRight":
-          this._moveRight(tile, mouseTileData)
+          this._shift("right", tile, mouseTileData, 0)
         break
         case "moveLeft":
-          this._moveLeft(tile, mouseTileData)
+          this._shift("left", tile, mouseTileData, 0)
         break
         case "remove":
           this._remove(tile, mouseTileData)
@@ -422,17 +424,21 @@
         let mouseTileLength =  mouseTileEnd- mouseTileStart + 1
 
         if (mouseTileLength === 1) {
-          if (charRatio < 0.33) {
+          if (charRatio < 0.33 && this.shadowMap[mouseIndex - 1]) {
             mouseTileData.action = "moveRight"
-          } else if (charRatio > 0.67) {
+          } else if (charRatio>0.67 && this.shadowMap[mouseIndex+1]) {
             mouseTileData.action = "moveLeft"
           }
 
         } else {
           // Multi-char tile
-          if (mouseIndex === mouseTileStart && charRatio < 0.5) {
+          if (mouseIndex === mouseTileStart
+                          && charRatio < 0.5
+                          && this.shadowMap[mouseIndex - 1]) {
             mouseTileData.action = "moveRight"
-          } else if (mouseIndex === mouseTileEnd && charRatio < 0.5) {
+          } else if (mouseIndex === mouseTileEnd
+                                 && charRatio < 0.5
+                                 && this.shadowMap[mouseIndex + 1]) {
             mouseTileData.action = "moveLeft"
           }
         }
@@ -495,8 +501,6 @@
         , result
         )
       }
-      // If one side is blocked, shift tiles on that side
-
 
       this.shadowMap = result
     }
@@ -595,76 +599,54 @@
 
 
     _makeSpace(tile, mouseTileData, freeSlots) {
-      let shadowMap = this.shadowMap.slice()
-      let space = freeSlots.left
-      let charCount = tile.tileData.charCount
-      let spaceNeeded = charCount - 1
-                      - freeSlots.right + freeSlots.left
-      let spaces = [space]
+      let charCount   = tile.tileData.charCount
+      let startSlot   = freeSlots.left
+      let spaceNeeded = charCount - 1 - freeSlots.right + startSlot
+      
+      let spaceData = this._spaceToLeft(startSlot, spaceNeeded)
 
-      while (space && spaceNeeded) {
-        space = shadowMap.lastIndexOf(0, space - 1)
-        if (space < 0) {
-          space = spaces.pop()
-          break
-        }
+      // undefined  | {
+      //   space: space
+      // , spacesFound: spacesNeeded - spacesToFind
+      // , spaceStillNeeded: spacesToFind }
 
-        spaces.push(space)
-        spaceNeeded -= 1
+      if (spaceData) {
+        startSlot = this._moveTilesLeft(spaceData.space, startSlot-1)
+        spaceNeeded = spaceData.spaceStillNeeded
       }
 
-      let startSlot = this._moveTilesLeft(
-        shadowMap
-      , space
-      , freeSlots.left - 1
-      )
-
       if (spaceNeeded) {
-        space = freeSlots.right
-        spaces = [] // There must be a space further to the right
-
-        while (spaceNeeded) {
-          space = shadowMap.indexOf(0, space + 1)
-          if (space < 0) {
-            space = spaces.pop()
-            break
-          }
-
-          spaces.push(space)
-          spaceNeeded -= 1
-        }
+        spaceData = this._spaceToRight(freeSlots.right, spaceNeeded)
 
         this._moveTilesRight(
-          shadowMap
-        , space
+          spaceData.space
         , freeSlots.right + 1
         )
       }
 
       for ( let ii = 0; ii < charCount; ii += 1 ) {
-        shadowMap[startSlot + ii] = tile
+        this.shadowMap[startSlot + ii] = tile
       }
 
-      return shadowMap
+      return this.shadowMap
     }
 
 
-    _moveTilesLeft(shadowMap, space, stopSlot) {
-
+    _moveTilesLeft(space, stopSlot) {
       while (space < stopSlot) {
-        let tile = this._getFirstTileAfter(space, stopSlot, shadowMap)
+        let tile = this._getFirstTileAfter(space, stopSlot, this.shadowMap)
 
         if (!tile) {
           // There are no more tiles in the way
           break
         }
 
-        let index = shadowMap.indexOf(tile)
+        let index = this.shadowMap.indexOf(tile)
         let charCount = tile.tileData.charCount
 
         for ( let ii = 0; ii < charCount; ii += 1 ) {
-          shadowMap[index + ii] = 0
-          shadowMap[space + ii] = tile
+          this.shadowMap[index + ii] = 0
+          this.shadowMap[space + ii] = tile
         }
 
         space += charCount
@@ -674,21 +656,21 @@
     }
 
 
-    _moveTilesRight(shadowMap, space, stopSlot) {
+    _moveTilesRight(space, stopSlot) {
       while (space > stopSlot) {
-        let tile = this._getLastTileBefore(space, stopSlot, shadowMap)
+        let tile = this._getLastTileBefore(space, stopSlot) //, shadowMap)
 
         if (!tile) {
           // There are no more tiles in the way
           break
         }
 
-        let index = shadowMap.lastIndexOf(tile)
+        let index = this.shadowMap.lastIndexOf(tile)
         let charCount = tile.tileData.charCount
 
         for ( let ii = 0; ii < charCount; ii += 1 ) {
-          shadowMap[index - ii] = 0
-          shadowMap[space - ii] = tile
+          this.shadowMap[index - ii] = 0
+          this.shadowMap[space - ii] = tile
         }
 
         space -= charCount
@@ -716,25 +698,165 @@
     }
 
 
-    _getLastTileBefore(space, stopSlot, shadowMap) {
+    _getLastTileBefore(space, stopSlot) { //, shadowMap) {
       // Work with a reversed clone of shadowMap
-      space = shadowMap.length - space - 1
-      stopSlot = shadowMap.length - stopSlot - 1
-      shadowMap = shadowMap.slice().reverse()
+      space =this. shadowMap.length - space - 1
+      stopSlot = this.shadowMap.length - stopSlot - 1
+      let shadowMap = this.shadowMap.slice().reverse()
 
       return this._getFirstTileAfter(space, stopSlot, shadowMap)
     }
 
 
-    _moveRight(tile, mouseTileData) {
+    // SHIFT // SHIFT // SHIFT // SHIFT // SHIFT // SHIFT // SHIFT //
 
+    _shift(direction, tile, mouseData) {
+      this.shadowMap = this.slotMap.slice()
+
+      // console.log("Shift " + direction)
+      // this._consoleMap(this.slotMap)
+      // this._consoleMap(this.shadowMap)
+
+      switch (direction) {
+        case "right":
+          return this._shiftRight(tile, mouseData, 0)
+        case "left": 
+          return this._shiftLeft(tile, mouseData, 0)
+      }
     }
 
 
-    _moveLeft(tile, mouseTileData) {
+    _shiftRight(tile, mouseTileData, startAdjust) {
+      // mouseTileData = {
+      //   // Existing tile under the mouse
+      //     slotIndex:   0 // slot under mouse
+      //   , tile:        0 // tile already in slot under mouse
+      //   , tileStart:   0 // first slot occupied by tile
+      //   , action:      "remove" // moveRight | moveLeft | fill
+      //   // Inserted tile
+      //   , insertStart: 0
+      //   , insertEnd:   0
+      //   }
+      
+      // Move tiles to right to create enough spaces, then 
+      let charCount = tile.tileData.charCount
+      let wordTile = mouseTileData.slotIndex + startAdjust
+      let spaceData = this._spaceToRight(wordTile, charCount)
+      let insertStart = wordTile
+      let moreSpace
 
+      if (!spaceData) {
+        return this._shiftLeft(tile, mouseTileData, 0)
+      }
+
+      this._moveTilesRight(spaceData.space, wordTile)
+
+      if (moreSpace = spaceData.spaceStillNeeded) {
+        spaceData = this._spaceToLeft(wordTile, moreSpace)
+        this._moveTilesLeft(spaceData.space.wordTile)
+        insertStart -= moreSpace
+      }
+
+      for ( let ii = 0; ii < charCount; ii += 1 ) {
+        this.shadowMap[insertStart + ii] = tile
+      }
     }
 
+
+    _shiftLeft(tile, mouseTileData, startAdjust) {
+      let charCount = tile.tileData.charCount
+      let wordTile = mouseTileData.slotIndex - startAdjust
+      let spaceData = this._spaceToLeft(wordTile, charCount)
+      let insertStart = wordTile
+      let moreSpace
+
+      if (!spaceData) {
+        return this._shiftRight(tile, mouseTileData, 0)
+      }
+
+      this._moveTilesLeft(spaceData.space, wordTile)
+      insertStart += spaceData.spacesFound - 1
+
+      if (moreSpace = spaceData.spaceStillNeeded) {
+        spaceData = this._spaceToRight(wordTile, moreSpace)
+        this._moveTilesRight(spaceData.space.wordTile)
+      }
+
+      for ( let ii = 0; ii < charCount; ii += 1 ) {
+        this.shadowMap[insertStart + ii] = tile
+      }
+    }
+
+
+    _spaceToLeft(space, spacesNeeded) {
+      let result
+      let spaces = []
+      let spacesToFind = spacesNeeded
+
+      if (space > 0) {
+        while (space && spacesToFind) {
+          space = this.shadowMap.lastIndexOf(0, space - 1)
+          if (space < 0) {
+            space = spaces.pop()
+            break
+          }
+
+          spaces.push(space)
+          spacesToFind -= 1
+        }
+
+      } else {
+        // There is no space to the left of slot 0
+        space = undefined
+      }
+
+      if (!isNaN(space)) {
+        result = {
+          space: space
+        , spacesFound: spacesNeeded - spacesToFind
+        , spaceStillNeeded: spacesToFind
+        }
+      }
+
+      return result
+    }
+
+
+    _spaceToRight(space, spacesNeeded) {
+      let result
+      let spaces = []
+      let spacesToFind = spacesNeeded
+
+      if (space > -1) {
+        while (spacesToFind) {
+          space = this.shadowMap.indexOf(0, space + 1)
+          if (space < 0) {
+            space = spaces.pop()
+            break
+          }
+
+          spaces.push(space)
+          spacesToFind -= 1
+        }
+
+      } else {
+        // There is no space to the left of slot 0
+        space = undefined
+      }
+
+      if (!isNaN(space)) {
+        result = {
+          space: space
+        , spacesFound: spacesNeeded - spacesToFind
+        , spaceStillNeeded: spacesToFind
+        }
+      }
+
+      return result
+    }
+
+
+    // REMOVE // REMOVE // REMOVE // REMOVE // REMOVE // REMOVE //
 
     _remove(tile, mouseTileData) {
 
@@ -746,6 +868,8 @@
         return console.log("No shadowMap")
       }
 
+      // this._consoleMap(this.shadowMap)
+
       let tiles = this.slotMap.getUnique()
 
       tiles.forEach((tile) => {
@@ -753,12 +877,15 @@
         let left
 
         if (this.slotMap.indexOf(tile) !== shadowIndex) {
-          if (shadowIndex < 0) {
-            tile.tileData.previewOnDock = true
-          } else {
-            left = this.railLeft + shadowIndex * this.charSize + "px"
-            tile.style.left = left
-          }
+          // TODO: style tile to show that it has moved
+        }
+
+        if (shadowIndex < 0) {
+          tile.tileData.previewOnDock = true
+
+        } else {
+          left = this.railLeft + shadowIndex * this.charSize + "px"
+          tile.style.left = left
         }
       })
     }
@@ -809,6 +936,6 @@
 
   lx.Word = Word
   lx.Dock = Dock
-  
+
   
 })(window.lexogram)
