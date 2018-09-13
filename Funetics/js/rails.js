@@ -1,6 +1,6 @@
 /** rails.js **
  *
- * 
+ *
 **/
 
 
@@ -138,7 +138,7 @@
       // this.board
       // this.rail
       // this.height
-      
+
       this.railElements = []
       this.slotMap = []
       this.shadowMap = []
@@ -437,7 +437,7 @@
                           && this.shadowMap[mouseIndex - 1]) {
             mouseTileData.action = "moveRight"
           } else if (mouseIndex === mouseTileEnd
-                                 && charRatio < 0.5
+                                 && charRatio > 0.5
                                  && this.shadowMap[mouseIndex + 1]) {
             mouseTileData.action = "moveLeft"
           }
@@ -620,7 +620,7 @@
       let spaceNeeded = charCount - 1 - freeSlots.right + startSlot
       let toRight = this._checkSpaceToRight(mouseTileData, freeSlots)
       let toLeft = spaceNeeded - toRight.spacesFound
-      
+
       let spaceData = this._spaceToLeft(startSlot, toLeft)
 
       // undefined  | {
@@ -739,7 +739,7 @@
       switch (direction) {
         case "right":
           return this._shiftRight(tile, mouseData, 0)
-        case "left": 
+        case "left":
           return this._shiftLeft(tile, mouseData, 0)
       }
     }
@@ -756,11 +756,14 @@
       //   , insertStart: 0
       //   , insertEnd:   0
       //   }
-      
-      // Move tiles to right to create enough spaces, then 
+
+      // Move tiles to right to create enough spaces, then
       let charCount = tile.tileData.charCount
       let wordTile = mouseTileData.slotIndex + startAdjust
-      let spaceData = this._spaceToRight(wordTile, charCount)
+      let freeSlots = { left: wordTile, right: wordTile }
+      let toLeft = this._checkSpaceToLeft(mouseTileData, freeSlots)
+      let toRight = charCount - toLeft.spacesFound
+      let spaceData = this._spaceToRight(wordTile, toRight)
       let insertStart = wordTile
       let moreSpace
 
@@ -770,7 +773,7 @@
 
       this._moveTilesRight(spaceData.space, wordTile)
 
-      if (moreSpace = spaceData.spaceStillNeeded) {
+      if (moreSpace = spaceData.spaceStillNeeded+toLeft.spacesFound) {
         spaceData = this._spaceToLeft(wordTile, moreSpace)
         this._moveTilesLeft(spaceData.space, wordTile)
         insertStart -= moreSpace
@@ -785,18 +788,21 @@
     _shiftLeft(tile, mouseTileData, startAdjust) {
       let charCount = tile.tileData.charCount
       let wordTile = mouseTileData.slotIndex - startAdjust
-      let spaceData = this._spaceToLeft(wordTile, charCount)
+      let freeSlots = { left: wordTile, right: wordTile }
+      let toRight = this._checkSpaceToRight(mouseTileData, freeSlots)
+      let toLeft = charCount - toRight.spacesFound
+      let spaceData = this._spaceToLeft(wordTile, toLeft)
       let insertStart = wordTile
       let moreSpace
 
       if (!spaceData) {
-        return this._shiftRight(tile, mouseTileData, 0)
+        return this._shiftRight(tile, mouseTileData, 1)
       }
 
       this._moveTilesLeft(spaceData.space, wordTile)
       insertStart -= (spaceData.spacesFound - 1)
 
-      if (moreSpace = spaceData.spaceStillNeeded) {
+      if (moreSpace = spaceData.spaceStillNeeded+toRight.spacesFound){
         spaceData = this._spaceToRight(wordTile, moreSpace)
         this._moveTilesRight(spaceData.space, wordTile)
       }
@@ -807,10 +813,19 @@
     }
 
 
-    _checkSpaceToRight(mouseTileData, freeSlot) {
-      let wanted = mouseTileData.insertEnd + freeSlot.left
-                 - mouseTileData.slotIndex - freeSlot.right
-      let found  = this._spaceToRight(freeSlot.right, wanted)
+    _checkSpaceToRight(mouseTileData, freeSlots) {
+      let wanted = mouseTileData.insertEnd + freeSlots.left
+                 - mouseTileData.slotIndex - freeSlots.right
+      let found  = this._spaceToRight(freeSlots.right, wanted)
+
+      return found || { spacesFound: 0 }
+    }
+
+
+    _checkSpaceToLeft(mouseTileData) {
+      let wanted = mouseTileData.slotIndex
+                 - mouseTileData.insertStart
+      let found  = this._spaceToRight(mouseTileData.slotIndex, wanted)
 
       return found || { spacesFound: 0 }
     }
@@ -968,5 +983,5 @@
   lx.Word = Word
   lx.Dock = Dock
 
-  
+
 })(window.lexogram)
