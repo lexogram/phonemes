@@ -207,11 +207,13 @@
 
 
     setTilePosition(tile, index) {
-      if (index === "fromShadowMap") {
-        index = this.shadowMap.indexOf(tile)
-        this.slotMap = this.shadowMap.slice()
+      // if (index === "fromShadowMap") {
+      //   console.log("setTilePosition", index)
+      //   index = this.shadowMap.indexOf(tile)
+      //   this.slotMap = this.shadowMap.slice()
 
-      } else if (isNaN(index)) {
+      // } else ...
+      if (isNaN(index)) {
         index = this.slotMap.indexOf(tile)
 
         if (index < 0) {
@@ -321,14 +323,13 @@
 
 
     checkWord() {
-      let tiles = this.slotMap.getUnique(true)
       let index
 
       // TODO: the reduce function will need to be revised for
       // vowel tiles that embrace consonants, like "i.e" in "like"
-      let word = tiles.reduce((string, tile) => {
+      let word = this.slotMap.reduce((string, tile) => {
         if (tile) {
-          string += tile.innerText.replace(/\n.*/, "")
+          string += this._tileText(tile)
         } else {
           string += " "
         }
@@ -336,7 +337,7 @@
         return string
       }, "")
 
-      let ipa = tiles.reduce((string, tile) => {
+      let ipa = this.slotMap.reduce((string, tile) => {
         if (tile) {
           string += tile.innerText.replace(/^.+\n/, "")
         }
@@ -379,22 +380,14 @@
           this._fillEmptySlot(tile, mouseTileData)
         break
         case "moveRight":
-          this._shift("right", tile, mouseTileData, 0)
+          this._shiftRight(tile, mouseTileData, 0)
         break
         case "moveLeft":
-          this._shift("left", tile, mouseTileData, 0)
+          this._shiftLeft(tile, mouseTileData, 0)
         break
         case "remove":
           this._remove(tile, mouseTileData)
       }
-
-      // // REMOVE // REMOVE // REMOVE //
-      // if (!this.shadowMap) {
-      //   this.shadowMap = []
-      // }
-      // // REMOVE // REMOVE // REMOVE //
-
-      // this._consoleMap(this.shadowMap)
     }
 
 
@@ -577,6 +570,8 @@
             return result
           }
         }
+
+        startSlot += 1 // not tooFar
       }
 
       if (result.length < startSlot + charCount) {
@@ -729,21 +724,6 @@
 
     // SHIFT // SHIFT // SHIFT // SHIFT // SHIFT // SHIFT // SHIFT //
 
-    _shift(direction, tile, mouseData) {
-      this.shadowMap = this.slotMap.slice()
-
-      // console.log("Shift " + direction)
-      // this._consoleMap(this.slotMap)
-      // this._consoleMap(this.shadowMap)
-
-      switch (direction) {
-        case "right":
-          return this._shiftRight(tile, mouseData, 0)
-        case "left":
-          return this._shiftLeft(tile, mouseData, 0)
-      }
-    }
-
 
     _shiftRight(tile, mouseTileData, startAdjust) {
       // mouseTileData = {
@@ -825,7 +805,7 @@
     _checkSpaceToLeft(mouseTileData) {
       let wanted = mouseTileData.slotIndex
                  - mouseTileData.insertStart
-      let found  = this._spaceToRight(mouseTileData.slotIndex, wanted)
+      let found  = this._spaceToLeft(mouseTileData.slotIndex, wanted)
 
       return found || { spacesFound: 0 }
     }
@@ -899,13 +879,12 @@
     }
 
 
-
-
-
     // REMOVE // REMOVE // REMOVE // REMOVE // REMOVE // REMOVE //
 
     _remove(tile, mouseTileData) {
-
+      this.shadowMap = this.shadowMap.slice()
+      this.removeFromMap(mouseTileData.tile)
+      this._fillEmptySlot(tile, mouseTileData)
     }
 
 
@@ -927,11 +906,15 @@
         }
 
         if (shadowIndex < 0) {
-          tile.tileData.previewOnDock = true
+          // <<< HACK
+          lx.funetics.board.dockRail.setTilePosition(tile)
+          // HACK >>>
 
         } else {
           left = this.railLeft + shadowIndex * this.charSize + "px"
           tile.style.left = left
+          tile.style.bottom = this.railBottom + "px"
+          tile.style.removeProperty("top")
         }
       })
     }
@@ -964,17 +947,22 @@
 
     /// DEV TOOL // DEV TOOL // DEV TOOL // DEV TOOL // DEV TOOL ///
 
-    _consoleMap(map) {
+    _consoleMap(map, message) {
 
       if (!map) {
         map = this.slotMap
       }
 
       console.log(
-        map===this.slotMap ? "slo" : "dow"
+        message || ""
+      , map === this.slotMap ? "slo" : "dow"
       , map.map((slot) => {
-        return slot ? slot.innerText.replace(/\n.*/, "") : 0
+        return slot ? this._tileText(slot) : 0
       }))
+    }
+
+    _tileText(tile) {
+      return tile.innerText.replace(/\n.*/, "")
     }
   }
 

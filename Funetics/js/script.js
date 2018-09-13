@@ -470,7 +470,7 @@ function empty(element) {
 
       this.word.checkIfTileIsOnRail(tile)
 
-      console.log("Tile is on rail?", tile.tileData.fromWord)
+      // console.log("Tile is on rail?", tile.tileData.fromWord)
 
       this.tile.style.zIndex = "99"
       this.moved = false
